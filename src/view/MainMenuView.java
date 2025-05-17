@@ -15,7 +15,7 @@ public class MainMenuView extends JFrame {
 
     public MainMenuView() {
         setTitle("Pacman Game");
-        setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
+        setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE); // Fully exit application when main menu is closed
 
         // Get the background image
         ResourceManager resourceManager = ResourceManager.getInstance();

@@ -13,6 +13,12 @@ public class Pacman extends Entity {
     private int animationFrame;
     private ResourceManager resourceManager;
 
+    // Powerup effects
+    private boolean speedBoost;
+    private boolean invulnerable;
+    private boolean freezeGhosts;
+    private int powerUpTimer;
+
     public Pacman(int x, int y, int speed) {
         super(x, y, speed);
         this.direction = 0;
@@ -21,44 +27,41 @@ public class Pacman extends Entity {
         this.poweredUp = false;
         this.animationFrame = 0;
         this.resourceManager = ResourceManager.getInstance();
+
+        this.speedBoost = false;
+        this.invulnerable = false;
+        this.freezeGhosts = false;
+        this.powerUpTimer = 0;
     }
 
     @Override
     public void moveUp() {
-        if (!isMoving) {
-            direction = 3;
-            isMoving = true;
-        }
+        direction = 3;
+        setMoving(true);
     }
 
     @Override
     public void moveDown() {
-        if (!isMoving) {
-            direction = 1;
-            isMoving = true;
-        }
+        direction = 1;
+        setMoving(true);
     }
 
     @Override
     public void moveLeft() {
-        if (!isMoving) {
-            direction = 2;
-            isMoving = true;
-        }
+        direction = 2;
+        setMoving(true);
     }
 
     @Override
     public void moveRight() {
-        if (!isMoving) {
-            direction = 0;
-            isMoving = true;
-        }
+        direction = 0;
+        setMoving(true);
     }
 
     @Override
     public void updateAnimation() {
-        // Update animation frame
-        if (isMoving) {
+        // Update animation frame if moving
+        if (isMoving()) {
             animationFrame = (animationFrame + 1) % 3;
         }
     }
@@ -69,6 +72,10 @@ public class Pacman extends Entity {
 
     public int getDirection() {
         return direction;
+    }
+
+    public void setDirection(int direction) {
+        this.direction = direction;
     }
 
     public int getScore() {
@@ -101,5 +108,56 @@ public class Pacman extends Entity {
 
     public int getAnimationFrame() {
         return animationFrame;
+    }
+
+    // Powerup methods
+    public void activateSpeedBoost() {
+        speedBoost = true;
+        powerUpTimer = 10; // 10 seconds
+    }
+
+    public void activateInvulnerability() {
+        invulnerable = true;
+        poweredUp = true;
+        powerUpTimer = 10; // 10 seconds
+    }
+
+    public void activateFreezeGhosts() {
+        freezeGhosts = true;
+        powerUpTimer = 5; // 5 seconds
+    }
+
+    public void updatePowerUpEffects() {
+        if (powerUpTimer > 0) {
+            powerUpTimer--;
+            if (powerUpTimer == 0) {
+                // Deactivate all powerups
+                speedBoost = false;
+                invulnerable = false;
+                freezeGhosts = false;
+                poweredUp = false;
+            }
+        }
+    }
+    // Add this method to the Pacman class
+    public void setAnimationFrame(int frame) {
+        // Ensure the frame is within bounds (0-2)
+        this.animationFrame = Math.max(0, Math.min(2, frame));
+    }
+
+    public boolean hasSpeedBoost() {
+        return speedBoost;
+    }
+
+    public boolean isInvulnerable() {
+        return invulnerable;
+    }
+
+    public boolean canFreezeGhosts() {
+        return freezeGhosts;
+    }
+
+    public int getPowerUpTimer() {
+        return powerUpTimer;
     }
 }

@@ -13,6 +13,11 @@ public class BoardModel extends AbstractTableModel {
     public static final int PACMAN = 3;
     public static final int GHOST = 4;
     public static final int POWERUP = 5;
+    public static final int POWERUP_SPEED = 6;
+    public static final int POWERUP_INVULNERABLE = 7;
+    public static final int POWERUP_EXTRALIFE = 8;
+    public static final int POWERUP_FREEZE = 9;
+    public static final int POWERUP_EAT = 10;
 
     public BoardModel(int size) {
         this.size = size;
@@ -61,15 +66,33 @@ public class BoardModel extends AbstractTableModel {
     }
 
     public boolean isWall(int row, int col) {
+        if (row < 0 || row >= size || col < 0 || col >= size) {
+            return true; // Out of bounds is treated as a wall
+        }
         return board[row][col] == WALL;
     }
 
     public boolean isDot(int row, int col) {
+        if (row < 0 || row >= size || col < 0 || col >= size) {
+            return false;
+        }
         return board[row][col] == DOT;
     }
 
     public boolean isPowerup(int row, int col) {
-        return board[row][col] == POWERUP;
+        if (row < 0 || row >= size || col < 0 || col >= size) {
+            return false;
+        }
+        return board[row][col] == POWERUP ||
+                board[row][col] == POWERUP_SPEED ||
+                board[row][col] == POWERUP_INVULNERABLE ||
+                board[row][col] == POWERUP_EXTRALIFE ||
+                board[row][col] == POWERUP_FREEZE ||
+                board[row][col] == POWERUP_EAT;
+    }
+
+    public boolean isValidPosition(int row, int col) {
+        return row >= 0 && row < size && col >= 0 && col < size;
     }
 
     public int getSize() {
@@ -77,10 +100,19 @@ public class BoardModel extends AbstractTableModel {
     }
 
     public void movePacman(int fromRow, int fromCol, int toRow, int toCol) {
-        // Check if the destination is valid (not a wall)
+        // Check if the destination is valid
         if (toRow >= 0 && toRow < size && toCol >= 0 && toCol < size && !isWall(toRow, toCol)) {
-            Integer currentCell = board[fromRow][fromCol];
             Integer targetCell = board[toRow][toCol];
+
+            // Handle dot collection
+            if (targetCell == DOT) {
+                // Handle scoring (to be implemented in GameController)
+            }
+
+            // Handle powerup collection
+            if (isPowerup(toRow, toCol)) {
+                // Handle powerup activation (to be implemented in GameController)
+            }
 
             // Update the cells
             board[fromRow][fromCol] = EMPTY;
@@ -93,17 +125,13 @@ public class BoardModel extends AbstractTableModel {
     }
 
     public void moveGhost(int fromRow, int fromCol, int toRow, int toCol) {
-        // Check if the destination is valid (not a wall)
+        // Check if the destination is valid
         if (toRow >= 0 && toRow < size && toCol >= 0 && toCol < size && !isWall(toRow, toCol)) {
             Integer currentCell = board[fromRow][fromCol];
             Integer targetCell = board[toRow][toCol];
 
-            // If the ghost is moving to an empty cell or a dot, remember the cell content
+            // Remember what was under the ghost
             Integer newFromCell = EMPTY;
-            if (currentCell != GHOST) {
-                // This happens if the ghost is on top of a dot or powerup
-                newFromCell = currentCell;
-            }
 
             // If the ghost is moving to a cell with Pacman, handle collision (to be implemented)
 
@@ -117,5 +145,25 @@ public class BoardModel extends AbstractTableModel {
         }
     }
 
-    // More methods will be added for game logic
+    public int[] findGhostPosition() {
+        for (int row = 0; row < size; row++) {
+            for (int col = 0; col < size; col++) {
+                if (board[row][col] == GHOST) {
+                    return new int[]{row, col};
+                }
+            }
+        }
+        return null;
+    }
+
+    public int[] findPacmanPosition() {
+        for (int row = 0; row < size; row++) {
+            for (int col = 0; col < size; col++) {
+                if (board[row][col] == PACMAN) {
+                    return new int[]{row, col};
+                }
+            }
+        }
+        return null;
+    }
 }

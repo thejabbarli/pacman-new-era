@@ -7,6 +7,8 @@ import java.awt.*;
 import java.awt.event.ComponentAdapter;
 import java.awt.event.ComponentEvent;
 import java.awt.event.KeyListener;
+import java.awt.event.WindowAdapter;
+import java.awt.event.WindowEvent;
 
 public class GameView extends JFrame {
     private BoardView boardView;
@@ -16,7 +18,7 @@ public class GameView extends JFrame {
         this.boardModel = boardModel;
 
         setTitle("Pacman Game");
-        setDefaultCloseOperation(JFrame.DISPOSE_ON_CLOSE);
+        setDefaultCloseOperation(JFrame.DISPOSE_ON_CLOSE); // Close just this window
 
         // Create board view
         boardView = new BoardView(boardModel);
@@ -29,6 +31,15 @@ public class GameView extends JFrame {
             @Override
             public void componentResized(ComponentEvent e) {
                 boardView.resizeBoard();
+            }
+        });
+
+        // Add window listener to handle closing
+        addWindowListener(new WindowAdapter() {
+            @Override
+            public void windowClosing(WindowEvent e) {
+                // Return to main menu when this window is closed
+                // This will be handled by the GameController
             }
         });
 
