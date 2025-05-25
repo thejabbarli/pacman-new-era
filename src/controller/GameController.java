@@ -1,5 +1,5 @@
 // ===========================
-// Full Updated GameController.java
+// Full Updated GameController.java with Collision, Life Loss, Victory Check
 // ===========================
 
 package controller;
@@ -90,11 +90,7 @@ public class GameController {
 
     private void createGameEntities() {
         int[] pacmanPos = boardModel.findPacmanPosition();
-        if (pacmanPos != null) {
-            pacman = new Pacman(pacmanPos[1], pacmanPos[0], 150);
-        } else {
-            pacman = new Pacman(1, 1, 150);
-        }
+        pacman = (pacmanPos != null) ? new Pacman(pacmanPos[1], pacmanPos[0], 150) : new Pacman(1, 1, 150);
 
         ghosts.clear();
         int boardSize = boardModel.getSize();
@@ -114,7 +110,7 @@ public class GameController {
         stopGameThreads();
 
         pacmanAnimationThread = new PacmanAnimationThread(pacman, gameView.getBoardView(), 150);
-        pacmanMovementThread = new PacmanMovementThread(pacman, boardModel, gameView.getBoardView(), 200);
+        pacmanMovementThread = new PacmanMovementThread(pacman, boardModel, gameView.getBoardView(), 200, this);
         gameTimerThread = new GameTimerThread(this);
         powerUpGeneratorThread = new PowerUpGeneratorThread(boardModel, 5000, 25);
 
@@ -135,7 +131,6 @@ public class GameController {
         if (pacmanMovementThread != null) pacmanMovementThread.stopThread();
         if (gameTimerThread != null) gameTimerThread.stopThread();
         if (powerUpGeneratorThread != null) powerUpGeneratorThread.stopThread();
-
         for (GhostThread ghostThread : ghostThreads) ghostThread.stopThread();
         ghostThreads.clear();
     }
@@ -153,6 +148,37 @@ public class GameController {
             case KeyEvent.VK_RIGHT, KeyEvent.VK_D -> pacmanMovementThread.setDirection(PacmanMovementThread.RIGHT);
             case KeyEvent.VK_P -> togglePause();
         }
+    }
+
+    public void checkGhostCollision(int newRow, int newCol) {
+        for (Ghost ghost : ghosts) {
+            if (ghost.getX() == newCol && ghost.getY() == newRow) {
+                updateLives(-1);
+                respawnAfterDeath();
+                break;
+            }
+        }
+    }
+
+    public void checkVictory() {
+        for (int r = 0; r < boardModel.getSize(); r++) {
+            for (int c = 0; c < boardModel.getSize(); c++) {
+                if (boardModel.getValueAt(r, c).equals(BoardModel.DOT)) {
+                    return;
+                }
+            }
+        }
+        handleVictory();
+    }
+
+    private void respawnAfterDeath() {
+        int[] pacmanPos = boardModel.findPacmanPosition();
+        if (pacmanPos != null) {
+            boardModel.setValueAt(BoardModel.EMPTY, pacmanPos[0], pacmanPos[1]);
+        }
+        pacman.setX(1);
+        pacman.setY(1);
+        boardModel.setValueAt(BoardModel.PACMAN, 1, 1);
     }
 
     private void togglePause() {
@@ -215,6 +241,12 @@ public class GameController {
         JOptionPane.showMessageDialog(gameView, "Game Over!\nYour score: " + score, "Game Over", JOptionPane.INFORMATION_MESSAGE);
         String name = JOptionPane.showInputDialog(gameView, "Enter your name for the high score:", "High Score", JOptionPane.QUESTION_MESSAGE);
         if (name != null && !name.trim().isEmpty()) saveHighScore(name, score);
+        returnToMainMenu();
+    }
+
+    private void handleVictory() {
+        stopGameThreads();
+        JOptionPane.showMessageDialog(gameView, "You Win!\nYour score: " + score, "Victory", JOptionPane.INFORMATION_MESSAGE);
         returnToMainMenu();
     }
 

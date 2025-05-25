@@ -1,5 +1,6 @@
 package model.threads;
 
+import controller.GameController;
 import model.BoardModel;
 import model.entity.Pacman;
 import view.BoardView;
@@ -18,8 +19,10 @@ public class PacmanMovementThread extends GameThread {
 
     private int nextDirection; // Direction pacman will move when possible
     private int currentDirection; // Direction pacman is currently moving
+    private GameController controller;
 
-    public PacmanMovementThread(Pacman pacman, BoardModel boardModel, BoardView boardView, int movementSpeed) {
+
+    public PacmanMovementThread(Pacman pacman, BoardModel boardModel, BoardView boardView, int movementSpeed, GameController controller) {
         super();
         this.pacman = pacman;
         this.boardModel = boardModel;
@@ -27,7 +30,9 @@ public class PacmanMovementThread extends GameThread {
         this.movementSpeed = movementSpeed;
         this.currentDirection = RIGHT;
         this.nextDirection = RIGHT;
+        this.controller = controller; // ✅ FIX: Assign the controller here
     }
+
 
     public void setDirection(int direction) {
         this.nextDirection = direction;
@@ -86,11 +91,16 @@ public class PacmanMovementThread extends GameThread {
             pacman.setY(newRow);
             pacman.setDirection(direction);
 
+            // 🔥 Game logic checks
+            controller.checkGhostCollision(newRow, newCol);
+            controller.checkVictory();
+
             // Sleep for movement delay
             Thread.sleep(movementSpeed);
 
             return true;
         }
+
 
         return false;
     }
