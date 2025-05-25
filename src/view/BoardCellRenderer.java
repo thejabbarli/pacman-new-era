@@ -30,12 +30,12 @@ public class BoardCellRenderer extends DefaultTableCellRenderer {
     public Component getTableCellRendererComponent(JTable table, Object value,
                                                    boolean isSelected, boolean hasFocus,
                                                    int row, int column) {
-        JLabel cell = (JLabel)super.getTableCellRendererComponent(table, "", isSelected, hasFocus, row, column);
+        JLabel cell = (JLabel) super.getTableCellRendererComponent(table, "", isSelected, hasFocus, row, column);
         cell.setBackground(Color.BLACK);
         cell.setForeground(Color.WHITE);
         cell.setText("");
+        cell.setIcon(null); // ✅ Always clear icon first to prevent ghosting
 
-        // Calculate cell size
         int cellWidth = table.getColumnModel().getColumn(column).getWidth();
         int cellHeight = table.getRowHeight(row);
 
@@ -44,34 +44,45 @@ public class BoardCellRenderer extends DefaultTableCellRenderer {
 
             switch (cellType) {
                 case BoardModel.EMPTY:
-                    // Leave cell empty with black background
                     break;
+
                 case BoardModel.WALL:
                     cell.setIcon(new ImageIcon(
                             resourceManager.getScaledImage("wall", cellWidth, cellHeight)));
                     break;
+
                 case BoardModel.DOT:
                     cell.setIcon(new ImageIcon(
                             resourceManager.getScaledImage("dot", cellWidth, cellHeight)));
                     break;
+
                 case BoardModel.PACMAN:
                     cell.setIcon(new ImageIcon(
                             resourceManager.getScaledPacmanImage(pacmanDirection, pacmanFrame, cellWidth, cellHeight)));
                     break;
+
                 case BoardModel.GHOST:
                     cell.setIcon(new ImageIcon(
                             resourceManager.getScaledImage("ghost_red", cellWidth, cellHeight)));
                     break;
-                case BoardModel.POWERUP:
+
+                case BoardModel.POWERUP_SPEED:
+                case BoardModel.POWERUP_INVULNERABLE:
+                case BoardModel.POWERUP_EXTRALIFE:
+                case BoardModel.POWERUP_FREEZE:
+                case BoardModel.POWERUP_EAT:
                     cell.setIcon(new ImageIcon(
                             resourceManager.getScaledImage("powerup", cellWidth, cellHeight)));
                     break;
+
                 default:
-                    // Leave cell empty
+                    cell.setIcon(null);
                     break;
             }
         }
 
         return cell;
     }
+
+
 }

@@ -1,8 +1,10 @@
 package view;
 
 import model.BoardModel;
+import model.utils.ResourceManager;
 
 import javax.swing.*;
+import javax.swing.table.DefaultTableCellRenderer;
 import java.awt.*;
 
 public class BoardView extends JPanel {
@@ -11,6 +13,9 @@ public class BoardView extends JPanel {
     private JLabel scoreLabel;
     private JLabel timeLabel;
     private JLabel livesLabel;
+    private JScrollPane scrollPane;
+
+    private static final int MIN_CELL_SIZE = 10;
 
     public BoardView(BoardModel boardModel) {
         this.boardModel = boardModel;
@@ -27,28 +32,28 @@ public class BoardView extends JPanel {
         statusPanel.add(timeLabel);
         statusPanel.add(livesLabel);
 
-        // Create the game table (center)
+        // Create the game table
         gameTable = new JTable(boardModel);
         gameTable.setDefaultRenderer(Object.class, new BoardCellRenderer());
-        gameTable.setRowHeight(20); // Initial cell size
         gameTable.setAutoResizeMode(JTable.AUTO_RESIZE_OFF);
         gameTable.setShowGrid(false);
         gameTable.setIntercellSpacing(new Dimension(0, 0));
-        gameTable.setTableHeader(null); // Hide the header
-
-        // Make all columns the same width
-        for (int i = 0; i < boardModel.getColumnCount(); i++) {
-            gameTable.getColumnModel().getColumn(i).setPreferredWidth(20);
-        }
-
-        // Add components to the panel
-        add(statusPanel, BorderLayout.NORTH);
-        add(new JScrollPane(gameTable), BorderLayout.CENTER);
-
-        // Make the components not focusable to allow keyboard input to the panel
+        gameTable.setTableHeader(null);
         gameTable.setFocusable(false);
-        setFocusable(true);
+
+
+
+        scrollPane = new JScrollPane(gameTable); // Prepare scroll pane
+
+        // Add status panel
+        add(statusPanel, BorderLayout.NORTH);
     }
+    public void updatePacmanRenderState(int direction, int frame) {
+        BoardCellRenderer renderer = (BoardCellRenderer) gameTable.getDefaultRenderer(Object.class);
+        renderer.setPacmanDirection(direction);
+        renderer.setPacmanFrame(frame);
+    }
+
 
     public void updateScore(int score) {
         scoreLabel.setText("Score: " + score);
@@ -67,27 +72,47 @@ public class BoardView extends JPanel {
     }
 
     public void resizeBoard() {
-        int cellSize = calculateCellSize();
-        gameTable.setRowHeight(cellSize);
+        if (scrollPane.getParent() == this) {
+            remove(scrollPane);
+        }
+        if (gameTable.getParent() == this) {
+            remove(gameTable);
+        }
 
-        for (int i = 0; i < boardModel.getColumnCount(); i++) {
+        int cellSize = calculateCellSize();
+        int boardSize = boardModel.getSize();
+
+        gameTable.setRowHeight(cellSize);
+        for (int i = 0; i < boardSize; i++) {
             gameTable.getColumnModel().getColumn(i).setPreferredWidth(cellSize);
         }
+
+        if (cellSize < MIN_CELL_SIZE) {
+            // Use scrollpane if cells would be too small
+            add(scrollPane, BorderLayout.CENTER);
+        } else {
+            // Show table directly
+            add(gameTable, BorderLayout.CENTER);
+        }
+
+        revalidate();
+        repaint();
+        requestFocusInWindow(); // ensure this component gets keyboard focus
+
     }
 
     private int calculateCellSize() {
-        // Calculate cell size based on available space
         Dimension viewSize = getSize();
         int boardSize = boardModel.getSize();
 
         int widthPerCell = viewSize.width / boardSize;
-        int heightPerCell = viewSize.height / boardSize;
+        int heightPerCell = (viewSize.height - 50) / boardSize; // Leave space for status panel
 
         return Math.min(widthPerCell, heightPerCell);
     }
 
     @Override
-    public void paintComponent(Graphics g) {
+    protected void paintComponent(Graphics g) {
         super.paintComponent(g);
         resizeBoard();
     }

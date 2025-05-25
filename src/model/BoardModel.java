@@ -100,29 +100,29 @@ public class BoardModel extends AbstractTableModel {
     }
 
     public void movePacman(int fromRow, int fromCol, int toRow, int toCol) {
-        // Check if the destination is valid
-        if (toRow >= 0 && toRow < size && toCol >= 0 && toCol < size && !isWall(toRow, toCol)) {
-            Integer targetCell = board[toRow][toCol];
+        if (!isValidPosition(toRow, toCol) || isWall(toRow, toCol)) return;
 
-            // Handle dot collection
-            if (targetCell == DOT) {
-                // Handle scoring (to be implemented in GameController)
-            }
-
-            // Handle powerup collection
-            if (isPowerup(toRow, toCol)) {
-                // Handle powerup activation (to be implemented in GameController)
-            }
-
-            // Update the cells
+        // Clear Pacman's old position only if it's actually Pacman
+        if (board[fromRow][fromCol] == PACMAN) {
             board[fromRow][fromCol] = EMPTY;
-            board[toRow][toCol] = PACMAN;
-
-            // Notify the view that these cells have changed
             fireTableCellUpdated(fromRow, fromCol);
-            fireTableCellUpdated(toRow, toCol);
         }
+
+        // Collect dot (you can trigger score update elsewhere)
+        if (board[toRow][toCol] == DOT) {
+            // Handle dot collection logic in controller if needed
+        }
+
+        // Collect power-up (can be handled elsewhere too)
+        if (isPowerup(toRow, toCol)) {
+            // Activation handled in controller
+        }
+
+        // Move Pacman
+        board[toRow][toCol] = PACMAN;
+        fireTableCellUpdated(toRow, toCol);
     }
+
 
     public void moveGhost(int fromRow, int fromCol, int toRow, int toCol) {
         // Check if the destination is valid

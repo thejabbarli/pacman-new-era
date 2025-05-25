@@ -16,29 +16,26 @@ public class PacmanAnimationThread extends GameThread {
         this.animationSpeed = animationSpeed;
     }
 
-    @Override
     protected void doAction() {
         try {
-            // Update Pacman's animation frame
             int currentFrame = pacman.getAnimationFrame();
 
-            // Calculate next frame using the 1-2-3-2-1 pattern
-            if (currentFrame == 0) {
-                animationDirection = 1; // going up
-            } else if (currentFrame == 2) {
-                animationDirection = -1; // going down
-            }
+            // Ping-pong animation: 0 → 1 → 2 → 1 → 0
+            if (currentFrame == 0) animationDirection = 1;
+            else if (currentFrame == 2) animationDirection = -1;
 
-            // Set the new frame
             pacman.setAnimationFrame(currentFrame + animationDirection);
 
-            // Update the view
+            // ✅ Sync the renderer
+            boardView.updatePacmanRenderState(pacman.getDirection(), pacman.getAnimationFrame());
+
+            // ✅ Refresh board
             boardView.repaint();
 
-            // Sleep for animation delay
             Thread.sleep(animationSpeed);
         } catch (InterruptedException e) {
             Thread.currentThread().interrupt();
         }
     }
+
 }
