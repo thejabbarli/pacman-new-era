@@ -126,6 +126,16 @@ public class GameController {
         }
     }
 
+    private void clearGhostTiles() {
+        for (int r = 0; r < boardModel.getSize(); r++) {
+            for (int c = 0; c < boardModel.getSize(); c++) {
+                if (boardModel.getValueAt(r, c).equals(BoardModel.GHOST)) {
+                    boardModel.setValueAt(BoardModel.DOT, r, c);
+                }
+            }
+        }
+    }
+
     private void stopGameThreads() {
         if (pacmanAnimationThread != null) pacmanAnimationThread.stopThread();
         if (pacmanMovementThread != null) pacmanMovementThread.stopThread();

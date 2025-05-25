@@ -33,6 +33,8 @@ public class BoardModel extends AbstractTableModel {
         this.size = size;
         this.board = new Integer[size][size];
         generateMaze();
+        ghostUnderTiles.clear();
+
     }
 
     private void generateMaze() {
@@ -124,16 +126,22 @@ public class BoardModel extends AbstractTableModel {
         Point from = new Point(fromCol, fromRow);
         Point to = new Point(toCol, toRow);
 
-        Integer restore = ghostUnderTiles.getOrDefault(from, EMPTY);
+        // 🧼 Restore old cell
+        Integer restore = ghostUnderTiles.getOrDefault(from, DOT); // default to DOT if ghost moved from DOT
         board[fromRow][fromCol] = restore;
         fireTableCellUpdated(fromRow, fromCol);
 
+        // 🧼 Store what was at the new position before ghost arrives
         ghostUnderTiles.put(to, board[toRow][toCol]);
+
+        // 👻 Move ghost
         board[toRow][toCol] = GHOST;
         fireTableCellUpdated(toRow, toCol);
 
+        // 🧼 Remove old tracking
         ghostUnderTiles.remove(from);
     }
+
 
     public int[] findGhostPosition() {
         for (int row = 0; row < size; row++) {
