@@ -8,6 +8,7 @@ import view.GameView;
 import view.MainMenuView;
 
 import javax.swing.*;
+import java.awt.*;
 import java.awt.event.KeyAdapter;
 import java.awt.event.KeyEvent;
 import java.awt.event.WindowAdapter;
@@ -111,8 +112,22 @@ public class GameController {
             pacman = new Pacman(1, 1, 150); // Default fallback
         }
 
-        // Create Ghosts (will be implemented later)
         ghosts.clear();
+
+// Example: spawn 4 ghosts around center (adjust as needed)
+        int boardSize = boardModel.getSize();
+        int center = boardSize / 2;
+
+        ghosts.add(new Ghost(center, center, 250, Color.RED));
+        ghosts.add(new Ghost(center + 1, center, 250, Color.CYAN));
+        ghosts.add(new Ghost(center, center + 1, 250, Color.ORANGE));
+        ghosts.add(new Ghost(center - 1, center, 250, Color.PINK));
+
+// Place ghosts on board
+        for (Ghost ghost : ghosts) {
+            boardModel.setValueAt(BoardModel.GHOST, ghost.getY(), ghost.getX());
+        }
+
     }
 
     private void startGameThreads() {
@@ -130,7 +145,12 @@ public class GameController {
         gameTimerThread.start();
         powerUpGeneratorThread.start();
 
-        // Ghost threads will be implemented later
+        for (Ghost ghost : ghosts) {
+            GhostThread ghostThread = new GhostThread(ghost, boardModel, gameView.getBoardView(), 250);
+            ghostThreads.add(ghostThread);
+            ghostThread.start();
+        }
+
     }
 
     private void stopGameThreads() {
