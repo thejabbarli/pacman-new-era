@@ -65,43 +65,30 @@ public class PacmanMovementThread extends GameThread {
         int newRow = row;
         int newCol = col;
 
-        // Calculate new position based on direction
         switch (direction) {
-            case RIGHT:
-                newCol = col + 1;
-                break;
-            case DOWN:
-                newRow = row + 1;
-                break;
-            case LEFT:
-                newCol = col - 1;
-                break;
-            case UP:
-                newRow = row - 1;
-                break;
+            case RIGHT -> newCol = col + 1;
+            case DOWN -> newRow = row + 1;
+            case LEFT -> newCol = col - 1;
+            case UP -> newRow = row - 1;
         }
 
-        // Check if the new position is valid (not a wall)
         if (!boardModel.isWall(newRow, newCol)) {
-            // Move Pacman in the model
-            boardModel.movePacman(row, col, newRow, newCol);
-
-            // Update Pacman's position
+            int eaten = boardModel.movePacman(row, col, newRow, newCol);
             pacman.setX(newCol);
             pacman.setY(newRow);
             pacman.setDirection(direction);
 
-            // 🔥 Game logic checks
+            if (eaten == BoardModel.DOT) controller.updateScore(10);
+            else if (eaten == BoardModel.BIG_DOT) controller.updateScore(50);
+
             controller.checkGhostCollision(newRow, newCol);
             controller.checkVictory();
 
-            // Sleep for movement delay
             Thread.sleep(movementSpeed);
-
             return true;
         }
 
-
         return false;
     }
+
 }

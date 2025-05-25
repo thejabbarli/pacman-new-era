@@ -1,7 +1,3 @@
-// ===========================
-// Full Updated BoardModel.java
-// ===========================
-
 package model;
 
 import model.utils.MazeGenerator;
@@ -26,6 +22,7 @@ public class BoardModel extends AbstractTableModel {
     public static final int POWERUP_EXTRALIFE = 8;
     public static final int POWERUP_FREEZE = 9;
     public static final int POWERUP_EAT = 10;
+    public static final int BIG_DOT = 11; // NEW: Big Dot (tileYemBig)
 
     private final Map<Point, Integer> ghostUnderTiles = new HashMap<>();
 
@@ -33,8 +30,6 @@ public class BoardModel extends AbstractTableModel {
         this.size = size;
         this.board = new Integer[size][size];
         generateMaze();
-        ghostUnderTiles.clear();
-
     }
 
     private void generateMaze() {
@@ -43,6 +38,9 @@ public class BoardModel extends AbstractTableModel {
         for (int i = 0; i < size; i++) {
             for (int j = 0; j < size; j++) {
                 board[i][j] = generatedMaze[i][j];
+                if (board[i][j] == POWERUP) {
+                    board[i][j] = BIG_DOT;
+                }
             }
         }
     }
@@ -76,20 +74,13 @@ public class BoardModel extends AbstractTableModel {
     }
 
     public boolean isWall(int row, int col) {
-        if (row < 0 || row >= size || col < 0 || col >= size) return true;
-        return board[row][col] == WALL;
+        return !isValidPosition(row, col) || board[row][col] == WALL;
     }
 
     public boolean isDot(int row, int col) {
-        if (row < 0 || row >= size || col < 0 || col >= size) return false;
-        return board[row][col] == DOT;
-    }
-
-    public boolean isPowerup(int row, int col) {
-        if (row < 0 || row >= size || col < 0 || col >= size) return false;
+        if (!isValidPosition(row, col)) return false;
         int val = board[row][col];
-        return val == POWERUP || val == POWERUP_SPEED || val == POWERUP_INVULNERABLE ||
-                val == POWERUP_EXTRALIFE || val == POWERUP_FREEZE || val == POWERUP_EAT;
+        return val == DOT || val == BIG_DOT;
     }
 
     public boolean isValidPosition(int row, int col) {
@@ -100,24 +91,20 @@ public class BoardModel extends AbstractTableModel {
         return size;
     }
 
-    public void movePacman(int fromRow, int fromCol, int toRow, int toCol) {
-        if (!isValidPosition(toRow, toCol) || isWall(toRow, toCol)) return;
+    public int movePacman(int fromRow, int fromCol, int toRow, int toCol) {
+        if (!isValidPosition(toRow, toCol) || isWall(toRow, toCol)) return -1;
+
+        int eaten = board[toRow][toCol];
 
         if (board[fromRow][fromCol] == PACMAN) {
             board[fromRow][fromCol] = EMPTY;
             fireTableCellUpdated(fromRow, fromCol);
         }
 
-        if (board[toRow][toCol] == DOT) {
-            // Handle dot logic elsewhere
-        }
-
-        if (isPowerup(toRow, toCol)) {
-            // Handle powerup logic elsewhere
-        }
-
         board[toRow][toCol] = PACMAN;
         fireTableCellUpdated(toRow, toCol);
+
+        return eaten;
     }
 
     public void moveGhost(int fromRow, int fromCol, int toRow, int toCol) {
@@ -126,22 +113,16 @@ public class BoardModel extends AbstractTableModel {
         Point from = new Point(fromCol, fromRow);
         Point to = new Point(toCol, toRow);
 
-        // 🧼 Restore old cell
-        Integer restore = ghostUnderTiles.getOrDefault(from, DOT); // default to DOT if ghost moved from DOT
+        Integer restore = ghostUnderTiles.getOrDefault(from, DOT);
         board[fromRow][fromCol] = restore;
         fireTableCellUpdated(fromRow, fromCol);
 
-        // 🧼 Store what was at the new position before ghost arrives
         ghostUnderTiles.put(to, board[toRow][toCol]);
-
-        // 👻 Move ghost
         board[toRow][toCol] = GHOST;
         fireTableCellUpdated(toRow, toCol);
 
-        // 🧼 Remove old tracking
         ghostUnderTiles.remove(from);
     }
-
 
     public int[] findGhostPosition() {
         for (int row = 0; row < size; row++) {

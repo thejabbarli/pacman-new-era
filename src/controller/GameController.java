@@ -5,11 +5,14 @@
 package controller;
 
 import model.BoardModel;
+import model.HighScoreManager;
 import model.entity.Pacman;
 import model.entity.Ghost;
 import model.threads.*;
 import view.GameView;
 import view.MainMenuView;
+import view.HighScoresView;
+
 
 import javax.swing.*;
 import java.awt.*;
@@ -39,6 +42,8 @@ public class GameController {
     private int score;
     private int lives;
     private int time;
+    private final HighScoreManager highScoreManager = new HighScoreManager();
+
 
     public GameController() {
         this.mainMenuView = new MainMenuView();
@@ -224,7 +229,10 @@ public class GameController {
         mainMenuView.setVisible(true);
     }
 
-    public void showHighScores() {}
+    public void showHighScores() {
+        new HighScoresView();
+    }
+
 
     public void exit() {
         System.exit(0);
@@ -257,10 +265,13 @@ public class GameController {
     private void handleVictory() {
         stopGameThreads();
         JOptionPane.showMessageDialog(gameView, "You Win!\nYour score: " + score, "Victory", JOptionPane.INFORMATION_MESSAGE);
+        String name = JOptionPane.showInputDialog(gameView, "Enter your name for the high score:", "High Score", JOptionPane.QUESTION_MESSAGE);
+        if (name != null && !name.trim().isEmpty()) saveHighScore(name.trim(), score);
         returnToMainMenu();
     }
 
-    private void saveHighScore(String name, int score) {
-        // Serializable implementation goes here
+    public void saveHighScore(String name, int score) {
+        highScoreManager.addScore(name, score);
     }
+
 }
