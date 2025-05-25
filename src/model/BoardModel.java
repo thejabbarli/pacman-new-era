@@ -1,7 +1,15 @@
+// ===========================
+// Full Updated BoardModel.java
+// ===========================
+
 package model;
 
 import model.utils.MazeGenerator;
+
 import javax.swing.table.AbstractTableModel;
+import java.awt.*;
+import java.util.HashMap;
+import java.util.Map;
 
 public class BoardModel extends AbstractTableModel {
     private Integer[][] board;
@@ -19,6 +27,8 @@ public class BoardModel extends AbstractTableModel {
     public static final int POWERUP_FREEZE = 9;
     public static final int POWERUP_EAT = 10;
 
+    private final Map<Point, Integer> ghostUnderTiles = new HashMap<>();
+
     public BoardModel(int size) {
         this.size = size;
         this.board = new Integer[size][size];
@@ -28,8 +38,6 @@ public class BoardModel extends AbstractTableModel {
     private void generateMaze() {
         MazeGenerator mazeGenerator = new MazeGenerator(size, size);
         int[][] generatedMaze = mazeGenerator.generate();
-
-        // Convert the int[][] maze to Integer[][] board
         for (int i = 0; i < size; i++) {
             for (int j = 0; j < size; j++) {
                 board[i][j] = generatedMaze[i][j];
@@ -62,33 +70,24 @@ public class BoardModel extends AbstractTableModel {
 
     @Override
     public boolean isCellEditable(int rowIndex, int columnIndex) {
-        return false; // Cells are not directly editable by the user
+        return false;
     }
 
     public boolean isWall(int row, int col) {
-        if (row < 0 || row >= size || col < 0 || col >= size) {
-            return true; // Out of bounds is treated as a wall
-        }
+        if (row < 0 || row >= size || col < 0 || col >= size) return true;
         return board[row][col] == WALL;
     }
 
     public boolean isDot(int row, int col) {
-        if (row < 0 || row >= size || col < 0 || col >= size) {
-            return false;
-        }
+        if (row < 0 || row >= size || col < 0 || col >= size) return false;
         return board[row][col] == DOT;
     }
 
     public boolean isPowerup(int row, int col) {
-        if (row < 0 || row >= size || col < 0 || col >= size) {
-            return false;
-        }
-        return board[row][col] == POWERUP ||
-                board[row][col] == POWERUP_SPEED ||
-                board[row][col] == POWERUP_INVULNERABLE ||
-                board[row][col] == POWERUP_EXTRALIFE ||
-                board[row][col] == POWERUP_FREEZE ||
-                board[row][col] == POWERUP_EAT;
+        if (row < 0 || row >= size || col < 0 || col >= size) return false;
+        int val = board[row][col];
+        return val == POWERUP || val == POWERUP_SPEED || val == POWERUP_INVULNERABLE ||
+                val == POWERUP_EXTRALIFE || val == POWERUP_FREEZE || val == POWERUP_EAT;
     }
 
     public boolean isValidPosition(int row, int col) {
@@ -102,47 +101,38 @@ public class BoardModel extends AbstractTableModel {
     public void movePacman(int fromRow, int fromCol, int toRow, int toCol) {
         if (!isValidPosition(toRow, toCol) || isWall(toRow, toCol)) return;
 
-        // Clear Pacman's old position only if it's actually Pacman
         if (board[fromRow][fromCol] == PACMAN) {
             board[fromRow][fromCol] = EMPTY;
             fireTableCellUpdated(fromRow, fromCol);
         }
 
-        // Collect dot (you can trigger score update elsewhere)
         if (board[toRow][toCol] == DOT) {
-            // Handle dot collection logic in controller if needed
+            // Handle dot logic elsewhere
         }
 
-        // Collect power-up (can be handled elsewhere too)
         if (isPowerup(toRow, toCol)) {
-            // Activation handled in controller
+            // Handle powerup logic elsewhere
         }
 
-        // Move Pacman
         board[toRow][toCol] = PACMAN;
         fireTableCellUpdated(toRow, toCol);
     }
 
-
     public void moveGhost(int fromRow, int fromCol, int toRow, int toCol) {
-        // Check if the destination is valid
-        if (toRow >= 0 && toRow < size && toCol >= 0 && toCol < size && !isWall(toRow, toCol)) {
-            Integer currentCell = board[fromRow][fromCol];
-            Integer targetCell = board[toRow][toCol];
+        if (!isValidPosition(toRow, toCol) || isWall(toRow, toCol)) return;
 
-            // Remember what was under the ghost
-            Integer newFromCell = EMPTY;
+        Point from = new Point(fromCol, fromRow);
+        Point to = new Point(toCol, toRow);
 
-            // If the ghost is moving to a cell with Pacman, handle collision (to be implemented)
+        Integer restore = ghostUnderTiles.getOrDefault(from, EMPTY);
+        board[fromRow][fromCol] = restore;
+        fireTableCellUpdated(fromRow, fromCol);
 
-            // Update the cells
-            board[fromRow][fromCol] = newFromCell;
-            board[toRow][toCol] = GHOST;
+        ghostUnderTiles.put(to, board[toRow][toCol]);
+        board[toRow][toCol] = GHOST;
+        fireTableCellUpdated(toRow, toCol);
 
-            // Notify the view that these cells have changed
-            fireTableCellUpdated(fromRow, fromCol);
-            fireTableCellUpdated(toRow, toCol);
-        }
+        ghostUnderTiles.remove(from);
     }
 
     public int[] findGhostPosition() {

@@ -9,6 +9,8 @@ public class Ghost extends Entity {
     private Color color;
     private Random random;
     private boolean isVulnerable;
+    private int lastDirection = -1;
+
 
     public Ghost(int x, int y, int speed, Color color) {
         super(x, y, speed);
@@ -92,5 +94,13 @@ public class Ghost extends Entity {
 
     public void setVulnerable(boolean vulnerable) {
         isVulnerable = vulnerable;
+    }
+
+    public int getLastDirection() {
+        return lastDirection;
+    }
+
+    public void setLastDirection(int dir) {
+        this.lastDirection = dir;
     }
 }

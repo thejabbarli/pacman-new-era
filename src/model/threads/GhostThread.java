@@ -4,68 +4,112 @@ import model.BoardModel;
 import model.entity.Ghost;
 import view.BoardView;
 
-public class GhostThread extends GameThread {
+import javax.swing.*;
+import java.awt.*;
+import java.util.*;
+import java.util.List;
+
+public class GhostThread extends Thread {
     private final Ghost ghost;
     private final BoardModel boardModel;
-    private final BoardView boardView;
+    private final BoardView boardView; // ✅ This field must exist
     private final int movementSpeed;
+    private volatile boolean running = true;
+    private volatile boolean paused = false;
 
     public GhostThread(Ghost ghost, BoardModel boardModel, BoardView boardView, int movementSpeed) {
-        super();
         this.ghost = ghost;
         this.boardModel = boardModel;
-        this.boardView = boardView;
+        this.boardView = boardView; // ✅ Save it to the field
         this.movementSpeed = movementSpeed;
     }
 
     @Override
-    protected void doAction() {
-        try {
-            // Basic ghost movement logic (random for now)
-            ghost.moveRandomly();
+    public void run() {
+        while (running) {
+            synchronized (this) {
+                while (paused) {
+                    try {
+                        wait();
+                    } catch (InterruptedException e) {
+                        Thread.currentThread().interrupt();
+                        return;
+                    }
+                }
+            }
 
-            // Try to move the ghost in the model
+            doAction(); // Your ghost movement logic
+        }
+    }
+
+
+    private void doAction() {
+        try {
             int row = ghost.getY();
             int col = ghost.getX();
-            int direction = ghost.getDirection();
 
-            int newRow = row;
-            int newCol = col;
+            List<Integer> dirList = new ArrayList<>(Arrays.asList(0, 1, 2, 3)); // 0: right, 1: down, 2: left, 3: up
+            Collections.shuffle(dirList);
 
-            // Calculate new position based on direction
-            switch (direction) {
-                case 0: // RIGHT
-                    newCol = col + 1;
+            // Avoid direct reversal
+            int last = ghost.getLastDirection();
+            int opposite = (last == 0) ? 2 : (last == 2) ? 0 : (last == 1) ? 3 : (last == 3) ? 1 : -1;
+            if (last != -1) dirList.remove((Integer) opposite);
+
+            boolean moved = false;
+
+            for (int dir : dirList) {
+                int newRow = row;
+                int newCol = col;
+
+                switch (dir) {
+                    case 0 -> newCol = col + 1; // RIGHT
+                    case 1 -> newRow = row + 1; // DOWN
+                    case 2 -> newCol = col - 1; // LEFT
+                    case 3 -> newRow = row - 1; // UP
+                }
+
+                if (boardModel.isValidPosition(newRow, newCol)
+                        && !boardModel.isWall(newRow, newCol)
+                        && !Objects.equals(boardModel.getValueAt(newRow, newCol), BoardModel.GHOST)) {
+
+                    ghost.setX(newCol);
+                    ghost.setY(newRow);
+                    ghost.setLastDirection(dir);
+
+                    boardModel.moveGhost(row, col, newRow, newCol);
+                    moved = true;
                     break;
-                case 1: // DOWN
-                    newRow = row + 1;
-                    break;
-                case 2: // LEFT
-                    newCol = col - 1;
-                    break;
-                case 3: // UP
-                    newRow = row - 1;
-                    break;
+                }
             }
 
-            // Check if the new position is valid (not a wall)
-            if (!boardModel.isWall(newRow, newCol)) {
-                // Move ghost in the model
-                boardModel.moveGhost(row, col, newRow, newCol);
-
-                // Update ghost's position
-                ghost.setX(newCol);
-                ghost.setY(newRow);
+            if (!moved) {
+                ghost.setLastDirection(-1); // no good move
             }
 
-            // Update the board view
-            boardView.repaint();
+            // ✅ Force GUI to refresh visually
+            SwingUtilities.invokeLater(boardView::repaint);
 
-            // Sleep for movement delay
             Thread.sleep(movementSpeed);
-
         } catch (InterruptedException e) {
             Thread.currentThread().interrupt();
         }
     }
+
+    public void stopThread() {
+        running = false;
+        this.interrupt(); // stop the thread safely
+    }
+
+    public void pauseThread() {
+        paused = true;
+    }
+
+    public void resumeThread() {
+        paused = false;
+        synchronized (this) {
+            notify(); // wake up if paused
+        }
+    }
+
 }
