@@ -1,17 +1,22 @@
 package model.threads;
 
 import model.BoardModel;
+import model.entity.Ghost;
+
+import java.util.List;
 import java.util.Random;
 
 public class PowerUpGeneratorThread extends GameThread {
     private final BoardModel boardModel;
+    private final List<Ghost> ghosts;
     private final Random random;
-    private final int generationInterval; // Milliseconds between generation attempts
-    private final int generationChance; // Percentage chance (0-100)
+    private final int generationInterval;  // in ms
+    private final int generationChance;    // 25%
 
-    public PowerUpGeneratorThread(BoardModel boardModel, int generationInterval, int generationChance) {
+    public PowerUpGeneratorThread(BoardModel boardModel, List<Ghost> ghosts, int generationInterval, int generationChance) {
         super();
         this.boardModel = boardModel;
+        this.ghosts = ghosts;
         this.random = new Random();
         this.generationInterval = generationInterval;
         this.generationChance = generationChance;
@@ -20,46 +25,39 @@ public class PowerUpGeneratorThread extends GameThread {
     @Override
     protected void doAction() {
         try {
-            // Sleep for the specified interval
             Thread.sleep(generationInterval);
+            for (Ghost ghost : ghosts) {
+                if (random.nextInt(100) < generationChance) {
+                    int row = ghost.getY();
+                    int col = ghost.getX();
 
-            // Every 5 seconds, enemies have a 25% chance to create a powerup
-            if (random.nextInt(100) < generationChance) {
-                generatePowerUp();
+                    // Only place if tile is not wall
+                    int[][] directions = {
+                            {0, 1}, {1, 0}, {0, -1}, {-1, 0} // right, down, left, up
+                    };
+
+                    for (int[] dir : directions) {
+                        int newRow = row + dir[0];
+                        int newCol = col + dir[1];
+
+                        if (!boardModel.isValidPosition(newRow, newCol)) continue;
+
+                        int current = (int) boardModel.getValueAt(newRow, newCol);
+                        boolean isFree = current == BoardModel.EMPTY || current == BoardModel.DOT;
+                        boolean isNotBoost = current < BoardModel.BOOST_HEALTH || current > BoardModel.BOOST_SHIELD;
+
+                        if (isFree && isNotBoost) {
+                            int boostType = random.nextInt(5) + 6; // 6 to 10
+                            boardModel.setValueAt(boostType, newRow, newCol);
+                            break; // Only place one
+                        }
+                    }
+
+                }
             }
 
         } catch (InterruptedException e) {
             Thread.currentThread().interrupt();
-        }
-    }
-
-    private void generatePowerUp() {
-        // Find a ghost position
-        int[] ghostPosition = boardModel.findGhostPosition();
-
-        if (ghostPosition != null) {
-            int ghostRow = ghostPosition[0];
-            int ghostCol = ghostPosition[1];
-
-            // Try to place a powerup in one of the adjacent cells
-            int[][] directions = {{0, 1}, {1, 0}, {0, -1}, {-1, 0}};
-
-            for (int[] dir : directions) {
-                int newRow = ghostRow + dir[0];
-                int newCol = ghostCol + dir[1];
-
-                // Check if the position is valid and is a dot
-                if (boardModel.isValidPosition(newRow, newCol) &&
-                        boardModel.isDot(newRow, newCol)) {
-
-                    // Place a random powerup type
-                    int powerUpType = random.nextInt(5) + 6; // 6-10 for different powerup types
-                    boardModel.setValueAt(powerUpType, newRow, newCol);
-
-                    // Only place one powerup
-                    break;
-                }
-            }
         }
     }
 }

@@ -10,6 +10,7 @@ public class Ghost extends Entity {
     private Random random;
     private boolean isVulnerable;
     private int lastDirection = -1;
+    private boolean confused = false;
 
 
     public Ghost(int x, int y, int speed, Color color) {
@@ -103,4 +104,12 @@ public class Ghost extends Entity {
     public void setLastDirection(int dir) {
         this.lastDirection = dir;
     }
+    public void setConfused(boolean confused) {
+        this.confused = confused;
+    }
+
+    public boolean isConfused() {
+        return confused;
+    }
+
 }

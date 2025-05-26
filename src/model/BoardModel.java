@@ -1,5 +1,9 @@
 package model;
 
+import controller.GameController;
+import model.boost.BoostEffect;
+import model.boost.BoostFactory;
+import model.boost.HealthBoost;
 import model.utils.MazeGenerator;
 
 import javax.swing.table.AbstractTableModel;
@@ -17,12 +21,15 @@ public class BoardModel extends AbstractTableModel {
     public static final int PACMAN = 3;
     public static final int GHOST = 4;
     public static final int POWERUP = 5;
-    public static final int POWERUP_SPEED = 6;
-    public static final int POWERUP_INVULNERABLE = 7;
-    public static final int POWERUP_EXTRALIFE = 8;
-    public static final int POWERUP_FREEZE = 9;
-    public static final int POWERUP_EAT = 10;
+    public static final int BOOST_HEALTH = 6;
+    public static final int BOOST_THUNDER = 7;
+    public static final int BOOST_ICE = 8;
+    public static final int BOOST_POISON = 9;
+    public static final int BOOST_SHIELD = 10;
+
     public static final int BIG_DOT = 11; // NEW: Big Dot (tileYemBig)
+    private GameController controller;
+
 
     private final Map<Point, Integer> ghostUnderTiles = new HashMap<>();
 
@@ -90,6 +97,9 @@ public class BoardModel extends AbstractTableModel {
     public int getSize() {
         return size;
     }
+    public void setController(GameController controller) {
+        this.controller = controller;
+    }
 
 
     public int movePacman(int fromRow, int fromCol, int toRow, int toCol) {
@@ -97,20 +107,21 @@ public class BoardModel extends AbstractTableModel {
 
         int eaten = board[toRow][toCol];
 
-        if (board[fromRow][fromCol] == PACMAN) {
-            board[fromRow][fromCol] = EMPTY;
-            fireTableCellUpdated(fromRow, fromCol);
-        } else {
-
-            fireTableCellUpdated(fromRow, fromCol);
-        }
-
+        // Move Pacman
+        board[fromRow][fromCol] = EMPTY;
+        fireTableCellUpdated(fromRow, fromCol);
 
         board[toRow][toCol] = PACMAN;
         fireTableCellUpdated(toRow, toCol);
 
+        // 🔁 Notify controller if it's a boost
+        if (controller != null && eaten >= BOOST_HEALTH && eaten <= BOOST_SHIELD) {
+            controller.onBoostCollected(eaten);
+        }
+
         return eaten;
     }
+
 
     public boolean moveGhost(int fromRow, int fromCol, int toRow, int toCol) {
         if (!isValidPosition(toRow, toCol) || isWall(toRow, toCol)) return false;
@@ -141,11 +152,6 @@ public class BoardModel extends AbstractTableModel {
 
         return hitPacman;
     }
-
-
-
-
-
 
     public int[] findGhostPosition() {
         for (int row = 0; row < size; row++) {

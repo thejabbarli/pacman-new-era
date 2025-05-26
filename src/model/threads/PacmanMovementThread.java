@@ -9,18 +9,19 @@ public class PacmanMovementThread extends GameThread {
     private final Pacman pacman;
     private final BoardModel boardModel;
     private final BoardView boardView;
-    private final int movementSpeed; // milliseconds between movements
+    private final int movementSpeed;
 
-    // Directions
     public static final int RIGHT = 0;
     public static final int DOWN = 1;
     public static final int LEFT = 2;
     public static final int UP = 3;
 
-    private int nextDirection; // Direction pacman will move when possible
-    private int currentDirection; // Direction pacman is currently moving
-    private GameController controller;
+    private int nextDirection;
+    private int currentDirection;
+    private final GameController controller;
 
+    private final int normalDelay = 140;
+    private final int boostedDelay = 40;
 
     public PacmanMovementThread(Pacman pacman, BoardModel boardModel, BoardView boardView, int movementSpeed, GameController controller) {
         super();
@@ -28,11 +29,10 @@ public class PacmanMovementThread extends GameThread {
         this.boardModel = boardModel;
         this.boardView = boardView;
         this.movementSpeed = movementSpeed;
+        this.controller = controller;
         this.currentDirection = RIGHT;
         this.nextDirection = RIGHT;
-        this.controller = controller; // ✅ FIX: Assign the controller here
     }
-
 
     public void setDirection(int direction) {
         this.nextDirection = direction;
@@ -41,17 +41,12 @@ public class PacmanMovementThread extends GameThread {
     @Override
     protected void doAction() {
         try {
-            // Try to move in the requested direction first
             if (tryMove(nextDirection)) {
                 currentDirection = nextDirection;
-            }
-            // Otherwise, try to continue in the current direction
-            else if (!tryMove(currentDirection)) {
-                // If can't move in any direction, just wait
+            } else if (!tryMove(currentDirection)) {
                 Thread.sleep(movementSpeed);
             }
 
-            // Update the board view
             boardView.repaint();
 
         } catch (InterruptedException e) {
@@ -60,12 +55,10 @@ public class PacmanMovementThread extends GameThread {
     }
 
     private boolean tryMove(int direction) throws InterruptedException {
-
-        // Before any move, ensure previous PACMANs aren't stuck
         for (int r = 0; r < boardModel.getSize(); r++) {
             for (int c = 0; c < boardModel.getSize(); c++) {
-                if (boardModel.getValueAt(r, c).equals(BoardModel.PACMAN) &&
-                        (r != pacman.getY() || c != pacman.getX())) {
+                if (boardModel.getValueAt(r, c).equals(BoardModel.PACMAN)
+                        && (r != pacman.getY() || c != pacman.getX())) {
                     boardModel.setValueAt(BoardModel.EMPTY, r, c);
                 }
             }
@@ -77,32 +70,38 @@ public class PacmanMovementThread extends GameThread {
         int newCol = col;
 
         switch (direction) {
-            case RIGHT -> newCol = col + 1;
-            case DOWN -> newRow = row + 1;
-            case LEFT -> newCol = col - 1;
-            case UP -> newRow = row - 1;
+            case RIGHT -> newCol++;
+            case DOWN -> newRow++;
+            case LEFT -> newCol--;
+            case UP -> newRow--;
         }
 
-        if (!boardModel.isWall(newRow, newCol)) {
+        if (!boardModel.isValidPosition(newRow, newCol) || boardModel.isWall(newRow, newCol)) return false;
 
-            boardModel.setValueAt(BoardModel.EMPTY, row, col);
+        boardModel.setValueAt(BoardModel.EMPTY, row, col);
 
-            int eaten = boardModel.movePacman(row, col, newRow, newCol);
-            pacman.setX(newCol);
-            pacman.setY(newRow);
-            pacman.setDirection(direction);
+        int eaten = boardModel.movePacman(row, col, newRow, newCol);
+        pacman.setX(newCol);
+        pacman.setY(newRow);
+        pacman.setDirection(direction);
 
-            if (eaten == BoardModel.DOT) controller.updateScore(10);
-            else if (eaten == BoardModel.BIG_DOT) controller.updateScore(50);
-
-            controller.checkGhostCollision(newRow, newCol);
-            controller.checkVictory();
-
-            Thread.sleep(movementSpeed);
-            return true;
+        switch (eaten) {
+            case BoardModel.DOT -> controller.updateScore(10);
+            case BoardModel.BIG_DOT -> controller.updateScore(50);
+            case BoardModel.BOOST_HEALTH,
+                    BoardModel.BOOST_SHIELD,
+                    BoardModel.BOOST_THUNDER,
+                    BoardModel.BOOST_ICE,
+                    BoardModel.BOOST_POISON -> controller.onBoostCollected(eaten);
         }
 
-        return false;
+        controller.checkGhostCollision(newRow, newCol);
+        controller.checkVictory();
+
+        int delay = controller.isPacmanSpeedBoost() ? boostedDelay : normalDelay;
+        Thread.sleep(delay);
+
+        Thread.sleep(movementSpeed);
+        return true;
     }
-
 }

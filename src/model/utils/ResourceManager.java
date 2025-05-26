@@ -46,11 +46,12 @@ public class ResourceManager {
             loadImage("ghost_orange", "res/ghosts/enemyRed.png");
 
             // Load powerup images
-            loadImage("powerup_speed", "res/boosts/boostThunder.png");
-            loadImage("powerup_invulnerability", "res/boosts/boostThunder.png");
-            loadImage("powerup_extralife", "res/boosts/boostThunder.png");
-            loadImage("powerup_freeze", "res/boosts/boostThunder.png");
-            loadImage("powerup_eat", "res/boosts/boostThunder.png");
+            loadImage("boostHealth", "res/boosts/boostHealth.png");
+            loadImage("boostThunder", "res/boosts/boostThunder.png");
+            loadImage("boostIce", "res/boosts/boostIce.png");
+            loadImage("boostPoison", "res/boosts/boostPoison.png");
+            loadImage("boostShield", "res/boosts/boostShield.png");
+
 
             // Load menu background
             loadImage("menu_background", "res/ghosts/danczakSlawomir.png");
@@ -273,4 +274,10 @@ public class ResourceManager {
         Image pacmanImage = getPacmanImage(direction, frame);
         return pacmanImage.getScaledInstance(width, height, Image.SCALE_SMOOTH);
     }
+
+    public ImageIcon getScaledBoostIcon(String name, int size) {
+        Image img = getImage(name);
+        return new ImageIcon(img.getScaledInstance(size, size, Image.SCALE_SMOOTH));
+    }
+
 }

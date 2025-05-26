@@ -66,13 +66,24 @@ public class BoardCellRenderer extends DefaultTableCellRenderer {
                             resourceManager.getScaledImage("ghost_red", cellWidth, cellHeight)));
                     break;
 
-                case BoardModel.POWERUP_SPEED:
-                case BoardModel.POWERUP_INVULNERABLE:
-                case BoardModel.POWERUP_EXTRALIFE:
-                case BoardModel.POWERUP_FREEZE:
-                case BoardModel.POWERUP_EAT:
-                    cell.setIcon(new ImageIcon(
-                            resourceManager.getScaledImage("powerup", cellWidth, cellHeight)));
+                case BoardModel.BOOST_HEALTH:
+                    cell.setIcon(resourceManager.getScaledBoostIcon("boostHealth", cellWidth));
+                    break;
+
+                case BoardModel.BOOST_THUNDER:
+                    cell.setIcon(resourceManager.getScaledBoostIcon("boostThunder", cellWidth));
+                    break;
+
+                case BoardModel.BOOST_ICE:
+                    cell.setIcon(resourceManager.getScaledBoostIcon("boostIce", cellWidth));
+                    break;
+
+                case BoardModel.BOOST_POISON:
+                    cell.setIcon(resourceManager.getScaledBoostIcon("boostPoison", cellWidth));
+                    break;
+
+                case BoardModel.BOOST_SHIELD:
+                    cell.setIcon(resourceManager.getScaledBoostIcon("boostShield", cellWidth));
                     break;
 
                 default:
@@ -83,6 +94,7 @@ public class BoardCellRenderer extends DefaultTableCellRenderer {
 
         return cell;
     }
+
 
 
 }

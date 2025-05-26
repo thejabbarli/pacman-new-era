@@ -6,6 +6,9 @@ package controller;
 
 import model.BoardModel;
 import model.HighScoreManager;
+import model.boost.BoostEffect;
+import model.boost.BoostFactory;
+import model.boost.HealthBoost;
 import model.entity.Pacman;
 import model.entity.Ghost;
 import model.threads.*;
@@ -43,9 +46,16 @@ public class GameController {
     private int lives;
     private int time;
     private final HighScoreManager highScoreManager = new HighScoreManager();
+    private boolean pacmanSpeedBoost = false;
+    private boolean invincible = false;
+    private boolean ghostsFrozen = false;
+    private boolean ghostsConfused = false;
+
+
 
 
     public GameController() {
+
         this.mainMenuView = new MainMenuView();
         this.menuController = new MenuController(this, mainMenuView);
         this.gameRunning = false;
@@ -67,6 +77,7 @@ public class GameController {
         time = 0;
 
         boardModel = new BoardModel(boardSize);
+        boardModel.setController(this);
         clearGhostTiles();
         createGameEntities();
 
@@ -119,7 +130,7 @@ public class GameController {
         pacmanAnimationThread = new PacmanAnimationThread(pacman, gameView.getBoardView(), 150);
         pacmanMovementThread = new PacmanMovementThread(pacman, boardModel, gameView.getBoardView(), 200, this);
         gameTimerThread = new GameTimerThread(this);
-        powerUpGeneratorThread = new PowerUpGeneratorThread(boardModel, 5000, 25);
+        powerUpGeneratorThread = new PowerUpGeneratorThread(boardModel, ghosts, 5000, 25); // 5s, 25% per ghost
 
         pacmanAnimationThread.start();
         pacmanMovementThread.start();
@@ -288,6 +299,51 @@ public class GameController {
         if (name != null && !name.trim().isEmpty()) saveHighScore(name.trim(), score);
         returnToMainMenu();
     }
+
+    public boolean isPacmanSpeedBoost() {
+        return pacmanSpeedBoost;
+    }
+
+    public void setPacmanSpeedBoost(boolean value) {
+        this.pacmanSpeedBoost = value;
+    }
+
+    public void onBoostCollected(int boostType) {
+        BoostEffect effect = BoostFactory.getBoostForType(boostType);
+        if (effect == null) return;
+
+        if (effect instanceof HealthBoost) {
+            effect.apply(this); // Instant effect
+        } else {
+            effect.applyWithDuration(this, 5000); // 5 second timed effect
+        }
+    }
+
+    public void setInvincible(boolean value) {
+        this.invincible = value;
+    }
+
+    public void freezeGhosts(boolean value) {
+        this.ghostsFrozen = value;
+        for (GhostThread thread : ghostThreads) {
+            if (value) {
+                thread.pauseThread();   // freeze
+            } else {
+                thread.resumeThread();  // unfreeze
+            }
+        }
+    }
+
+    public void setGhostsConfused(boolean value) {
+        this.ghostsConfused = value;
+        for (Ghost ghost : ghosts) {
+            ghost.setConfused(value);
+        }
+    }
+    public boolean isInvincible() {
+        return invincible;
+    }
+
 
 
 

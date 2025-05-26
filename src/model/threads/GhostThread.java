@@ -18,8 +18,10 @@ public class GhostThread extends Thread {
     private final int movementSpeed;
     private volatile boolean running = true;
     private volatile boolean paused = false;
+    private final Random random = new Random();
 
     public GhostThread(Ghost ghost, BoardModel boardModel, BoardView boardView, int movementSpeed, GameController controller) {
+
         this.ghost = ghost;
         this.boardModel = boardModel;
         this.boardView = boardView;
@@ -50,18 +52,27 @@ public class GhostThread extends Thread {
             int row = ghost.getY();
             int col = ghost.getX();
 
-            List<Integer> dirList = new ArrayList<>(Arrays.asList(0, 1, 2, 3)); // 0: right, 1: down, 2: left, 3: up
-            Collections.shuffle(dirList);
+            List<Integer> dirList = new ArrayList<>();
 
-            int last = ghost.getLastDirection();
-            int opposite = switch (last) {
-                case 0 -> 2; // right -> left
-                case 2 -> 0; // left -> right
-                case 1 -> 3; // down -> up
-                case 3 -> 1; // up -> down
-                default -> -1;
-            };
-            if (last != -1) dirList.remove((Integer) opposite);
+            if (ghost.isConfused()) {
+                // Confused ghosts pick completely random directions (can repeat)
+                for (int i = 0; i < 4; i++) {
+                    dirList.add(random.nextInt(4)); // values 0–3
+                }
+            } else {
+                dirList = new ArrayList<>(Arrays.asList(0, 1, 2, 3)); // 0: right, 1: down, 2: left, 3: up
+                Collections.shuffle(dirList);
+
+                int last = ghost.getLastDirection();
+                int opposite = switch (last) {
+                    case 0 -> 2;
+                    case 1 -> 3;
+                    case 2 -> 0;
+                    case 3 -> 1;
+                    default -> -1;
+                };
+                if (last != -1) dirList.remove((Integer) opposite);
+            }
 
             boolean moved = false;
 
@@ -85,10 +96,9 @@ public class GhostThread extends Thread {
                     ghost.setLastDirection(dir);
 
                     boolean hitPacman = boardModel.moveGhost(row, col, newRow, newCol);
-                    if (hitPacman) {
+                    if (hitPacman && !controller.isInvincible()) {
                         controller.updateLives(-1);
                         controller.respawnAfterDeath();
-                        return; // Exit tick, don't move further
                     }
 
                     moved = true;
@@ -101,12 +111,13 @@ public class GhostThread extends Thread {
             }
 
             SwingUtilities.invokeLater(boardView::repaint);
-
             Thread.sleep(movementSpeed);
+
         } catch (InterruptedException e) {
             Thread.currentThread().interrupt();
         }
     }
+
 
     public void stopThread() {
         running = false;
