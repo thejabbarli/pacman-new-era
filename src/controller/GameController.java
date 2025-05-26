@@ -127,7 +127,7 @@ public class GameController {
         powerUpGeneratorThread.start();
 
         for (Ghost ghost : ghosts) {
-            GhostThread ghostThread = new GhostThread(ghost, boardModel, gameView.getBoardView(), 350);
+            GhostThread ghostThread = new GhostThread(ghost, boardModel, gameView.getBoardView(), 350, this);
             ghostThreads.add(ghostThread);
             ghostThread.start();
         }
@@ -192,7 +192,7 @@ public class GameController {
         handleVictory();
     }
 
-    private void respawnAfterDeath() {
+    public void respawnAfterDeath() {
         // 1. Clear every PACMAN from board (safe reset)
         for (int r = 0; r < boardModel.getSize(); r++) {
             for (int c = 0; c < boardModel.getSize(); c++) {
