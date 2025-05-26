@@ -67,7 +67,9 @@ public class GameController {
         time = 0;
 
         boardModel = new BoardModel(boardSize);
+        clearGhostTiles();
         createGameEntities();
+
 
         gameView = new GameView(boardModel);
         gameView.updateScore(score);
@@ -141,6 +143,8 @@ public class GameController {
         }
     }
 
+
+
     private void stopGameThreads() {
         if (pacmanAnimationThread != null) pacmanAnimationThread.stopThread();
         if (pacmanMovementThread != null) pacmanMovementThread.stopThread();
@@ -175,6 +179,8 @@ public class GameController {
         }
     }
 
+
+
     public void checkVictory() {
         for (int r = 0; r < boardModel.getSize(); r++) {
             for (int c = 0; c < boardModel.getSize(); c++) {
@@ -187,14 +193,27 @@ public class GameController {
     }
 
     private void respawnAfterDeath() {
-        int[] pacmanPos = boardModel.findPacmanPosition();
-        if (pacmanPos != null) {
-            boardModel.setValueAt(BoardModel.EMPTY, pacmanPos[0], pacmanPos[1]);
+        // 1. Clear every PACMAN from board (safe reset)
+        for (int r = 0; r < boardModel.getSize(); r++) {
+            for (int c = 0; c < boardModel.getSize(); c++) {
+                if (boardModel.getValueAt(r, c).equals(BoardModel.PACMAN)) {
+                    boardModel.setValueAt(BoardModel.EMPTY, r, c);
+                }
+            }
         }
+
+        // 2. Reset coordinates
         pacman.setX(1);
         pacman.setY(1);
+
+        // 3. Force cell to be empty (even if overwritten by ghost)
+        boardModel.setValueAt(BoardModel.EMPTY, 1, 1);
+
+        // 4. Place new Pacman
         boardModel.setValueAt(BoardModel.PACMAN, 1, 1);
     }
+
+
 
     private void togglePause() {
         if (pacmanAnimationThread != null && pacmanMovementThread != null) {
@@ -269,6 +288,8 @@ public class GameController {
         if (name != null && !name.trim().isEmpty()) saveHighScore(name.trim(), score);
         returnToMainMenu();
     }
+
+
 
     public void saveHighScore(String name, int score) {
         highScoreManager.addScore(name, score);

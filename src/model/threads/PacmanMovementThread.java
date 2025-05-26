@@ -60,6 +60,17 @@ public class PacmanMovementThread extends GameThread {
     }
 
     private boolean tryMove(int direction) throws InterruptedException {
+
+        // Before any move, ensure previous PACMANs aren't stuck
+        for (int r = 0; r < boardModel.getSize(); r++) {
+            for (int c = 0; c < boardModel.getSize(); c++) {
+                if (boardModel.getValueAt(r, c).equals(BoardModel.PACMAN) &&
+                        (r != pacman.getY() || c != pacman.getX())) {
+                    boardModel.setValueAt(BoardModel.EMPTY, r, c);
+                }
+            }
+        }
+
         int row = pacman.getY();
         int col = pacman.getX();
         int newRow = row;
@@ -73,6 +84,9 @@ public class PacmanMovementThread extends GameThread {
         }
 
         if (!boardModel.isWall(newRow, newCol)) {
+
+            boardModel.setValueAt(BoardModel.EMPTY, row, col);
+
             int eaten = boardModel.movePacman(row, col, newRow, newCol);
             pacman.setX(newCol);
             pacman.setY(newRow);

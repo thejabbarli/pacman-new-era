@@ -91,6 +91,7 @@ public class BoardModel extends AbstractTableModel {
         return size;
     }
 
+
     public int movePacman(int fromRow, int fromCol, int toRow, int toCol) {
         if (!isValidPosition(toRow, toCol) || isWall(toRow, toCol)) return -1;
 
@@ -99,7 +100,11 @@ public class BoardModel extends AbstractTableModel {
         if (board[fromRow][fromCol] == PACMAN) {
             board[fromRow][fromCol] = EMPTY;
             fireTableCellUpdated(fromRow, fromCol);
+        } else {
+
+            fireTableCellUpdated(fromRow, fromCol);
         }
+
 
         board[toRow][toCol] = PACMAN;
         fireTableCellUpdated(toRow, toCol);
@@ -113,16 +118,29 @@ public class BoardModel extends AbstractTableModel {
         Point from = new Point(fromCol, fromRow);
         Point to = new Point(toCol, toRow);
 
-        Integer restore = ghostUnderTiles.getOrDefault(from, DOT);
+        // 🧼 Make sure we store what was there before ghost moved in (if not already)
+        if (!ghostUnderTiles.containsKey(from)) {
+            ghostUnderTiles.put(from, board[fromRow][fromCol] == GHOST ? DOT : board[fromRow][fromCol]);
+        }
+
+        // 🧼 Restore the old cell under the ghost
+        int restore = ghostUnderTiles.getOrDefault(from, DOT);
         board[fromRow][fromCol] = restore;
         fireTableCellUpdated(fromRow, fromCol);
+        ghostUnderTiles.remove(from);
 
-        ghostUnderTiles.put(to, board[toRow][toCol]);
+        // 🧼 Save what is currently at destination
+        if (board[toRow][toCol] != GHOST) {
+            ghostUnderTiles.put(to, board[toRow][toCol]);
+        }
+
+        // 👻 Move ghost to new tile
         board[toRow][toCol] = GHOST;
         fireTableCellUpdated(toRow, toCol);
-
-        ghostUnderTiles.remove(from);
     }
+
+
+
 
     public int[] findGhostPosition() {
         for (int row = 0; row < size; row++) {
