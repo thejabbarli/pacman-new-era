@@ -1,7 +1,3 @@
-// ===========================
-// Full Updated GameController.java with Collision, Life Loss, Victory Check
-// ===========================
-
 package controller;
 
 import model.BoardModel;
@@ -19,9 +15,7 @@ import view.GameView;
 import view.MainMenuView;
 import view.HighScoresView;
 
-
 import javax.swing.*;
-import java.awt.*;
 import java.awt.event.KeyAdapter;
 import java.awt.event.KeyEvent;
 import java.awt.event.WindowAdapter;
@@ -35,16 +29,14 @@ public class GameController {
     private GameView gameView;
     private BoardModel boardModel;
     private boolean gameRunning;
-
     private Pacman pacman;
     private List<Ghost> ghosts;
-
     private PacmanAnimationThread pacmanAnimationThread;
     private PacmanMovementThread pacmanMovementThread;
     private GameTimerThread gameTimerThread;
     private PowerUpGeneratorThread powerUpGeneratorThread;
     private List<GhostThread> ghostThreads;
-
+    private final List<GhostAnimationThread> ghostAnimationThreads = new ArrayList<>();
     private int score;
     private int lives;
     private int time;
@@ -54,11 +46,7 @@ public class GameController {
     private boolean ghostsFrozen = false;
     private boolean ghostsConfused = false;
 
-
-
-
     public GameController() {
-
         this.mainMenuView = new MainMenuView();
         this.menuController = new MenuController(this, mainMenuView);
         this.gameRunning = false;
@@ -78,41 +66,33 @@ public class GameController {
         score = 0;
         lives = 3;
         time = 0;
-
         boardModel = new BoardModel(boardSize);
         MazeGenerator generator = new MazeGenerator(boardSize, boardSize);
         int[][] maze = generator.generate();
-
         for (int r = 0; r < boardSize; r++) {
             for (int c = 0; c < boardSize; c++) {
                 boardModel.setTile(r, c, maze[r][c]);
             }
         }
-
         boardModel.setController(this);
         clearGhostTiles();
         createGameEntities();
-
-
-        gameView = new GameView(boardModel);
+        gameView = new GameView(boardModel, ghosts);
         gameView.updateScore(score);
         gameView.updateLives(lives);
         gameView.updateTime(time);
-
         gameView.addKeyListener(new KeyAdapter() {
             @Override
             public void keyPressed(KeyEvent e) {
                 handleKeyPress(e);
             }
         });
-
         gameView.addWindowListener(new WindowAdapter() {
             @Override
             public void windowClosing(WindowEvent e) {
                 returnToMainMenu();
             }
         });
-
         startGameThreads();
         gameRunning = true;
         gameView.setVisible(true);
@@ -121,23 +101,17 @@ public class GameController {
     private void createGameEntities() {
         int[] pacmanPos = boardModel.findPacmanPosition();
         pacman = (pacmanPos != null) ? new Pacman(pacmanPos[1], pacmanPos[0], 150) : new Pacman(1, 1, 150);
-
         ghosts.clear();
         int boardSize = boardModel.getSize();
         int center = boardSize / 2;
-
         ghosts.clear();
         for (GhostConfig config : GameConstants.DEFAULT_GHOSTS) {
             int gx = center + config.offsetX;
             int gy = center + config.offsetY;
-
             Ghost ghost = new Ghost(gx, gy, config.speed, config.type);
-
             ghosts.add(ghost);
             boardModel.setTile(gy, gx, BoardModel.GHOST);
         }
-
-
         for (Ghost ghost : ghosts) {
             boardModel.setValueAt(BoardModel.GHOST, ghost.getY(), ghost.getX());
         }
@@ -145,21 +119,23 @@ public class GameController {
 
     private void startGameThreads() {
         stopGameThreads();
-
         pacmanAnimationThread = new PacmanAnimationThread(pacman, gameView.getBoardView(), 150);
         pacmanMovementThread = new PacmanMovementThread(pacman, boardModel, gameView.getBoardView(), 200, this);
         gameTimerThread = new GameTimerThread(this);
-        powerUpGeneratorThread = new PowerUpGeneratorThread(boardModel, ghosts, 5000, 25); // 5s, 25% per ghost
-
+        powerUpGeneratorThread = new PowerUpGeneratorThread(boardModel, ghosts, 5000, 25);
         pacmanAnimationThread.start();
         pacmanMovementThread.start();
         gameTimerThread.start();
         powerUpGeneratorThread.start();
-
+        ghostThreads.clear();
+        ghostAnimationThreads.clear();
         for (Ghost ghost : ghosts) {
             GhostThread ghostThread = new GhostThread(ghost, boardModel, gameView.getBoardView(), 350, this);
+            GhostAnimationThread animationThread = new GhostAnimationThread(ghost, gameView.getBoardView(), 300);
             ghostThreads.add(ghostThread);
+            ghostAnimationThreads.add(animationThread);
             ghostThread.start();
+            animationThread.start();
         }
     }
 
@@ -173,8 +149,6 @@ public class GameController {
         }
     }
 
-
-
     private void stopGameThreads() {
         if (pacmanAnimationThread != null) pacmanAnimationThread.stopThread();
         if (pacmanMovementThread != null) pacmanMovementThread.stopThread();
@@ -182,6 +156,8 @@ public class GameController {
         if (powerUpGeneratorThread != null) powerUpGeneratorThread.stopThread();
         for (GhostThread ghostThread : ghostThreads) ghostThread.stopThread();
         ghostThreads.clear();
+        for (GhostAnimationThread animationThread : ghostAnimationThreads) animationThread.stopThread();
+        ghostAnimationThreads.clear();
     }
 
     private void handleKeyPress(KeyEvent e) {
@@ -189,7 +165,6 @@ public class GameController {
             returnToMainMenu();
             return;
         }
-
         switch (e.getKeyCode()) {
             case KeyEvent.VK_UP, KeyEvent.VK_W -> pacmanMovementThread.setDirection(PacmanMovementThread.UP);
             case KeyEvent.VK_DOWN, KeyEvent.VK_S -> pacmanMovementThread.setDirection(PacmanMovementThread.DOWN);
@@ -209,21 +184,16 @@ public class GameController {
         }
     }
 
-
-
     public void checkVictory() {
         for (int r = 0; r < boardModel.getSize(); r++) {
             for (int c = 0; c < boardModel.getSize(); c++) {
-                if (boardModel.getValueAt(r, c).equals(BoardModel.DOT)) {
-                    return;
-                }
+                if (boardModel.getValueAt(r, c).equals(BoardModel.DOT)) return;
             }
         }
         handleVictory();
     }
 
     public void respawnAfterDeath() {
-        // Remove all PACMANs
         for (int r = 0; r < boardModel.getSize(); r++) {
             for (int c = 0; c < boardModel.getSize(); c++) {
                 if (boardModel.getTile(r, c) == BoardModel.PACMAN) {
@@ -231,22 +201,13 @@ public class GameController {
                 }
             }
         }
-
-        // Reset coordinates
         pacman.setX(1);
         pacman.setY(1);
-
-        // If ghost is at spawn point, restore original tile (DOT or EMPTY)
         if (boardModel.getTile(1, 1) == BoardModel.GHOST) {
             boardModel.setTile(1, 1, BoardModel.DOT);
         }
-
-        // Place Pacman back
         boardModel.setTile(1, 1, BoardModel.PACMAN);
     }
-
-
-
 
     private void togglePause() {
         if (pacmanAnimationThread != null && pacmanMovementThread != null) {
@@ -284,7 +245,6 @@ public class GameController {
     public void showHighScores() {
         new HighScoresView();
     }
-
 
     public void exit() {
         System.exit(0);
@@ -333,11 +293,10 @@ public class GameController {
     public void onBoostCollected(int boostType) {
         BoostEffect effect = BoostFactory.getBoostForType(boostType);
         if (effect == null) return;
-
         if (effect instanceof HealthBoost) {
-            effect.apply(this); // Instant effect
+            effect.apply(this);
         } else {
-            effect.applyWithDuration(this, 5000); // 5 second timed effect
+            effect.applyWithDuration(this, 5000);
         }
     }
 
@@ -349,9 +308,9 @@ public class GameController {
         this.ghostsFrozen = value;
         for (GhostThread thread : ghostThreads) {
             if (value) {
-                thread.pauseThread();   // freeze
+                thread.pauseThread();
             } else {
-                thread.resumeThread();  // unfreeze
+                thread.resumeThread();
             }
         }
     }
@@ -362,15 +321,12 @@ public class GameController {
             ghost.setConfused(value);
         }
     }
+
     public boolean isInvincible() {
         return invincible;
     }
 
-
-
-
     public void saveHighScore(String name, int score) {
         highScoreManager.addScore(name, score);
     }
-
 }

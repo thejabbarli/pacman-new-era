@@ -1,25 +1,25 @@
 package model.entity;
 
 import interfaces.Movement;
-
 import java.awt.*;
 import java.util.Random;
 
 public class Ghost extends Entity {
-    private int direction; // 0: right, 1: down, 2: left, 3: up
+    private int direction;
     private final Random random;
-    private boolean isVulnerable;
+
     private int lastDirection = -1;
     private boolean confused = false;
-    private final String type; // e.g. "blinky", used to select image
+    private final String type;
+    private int animationFrame = 1;
+
 
     public Ghost(int x, int y, int speed, String type) {
         super(x, y, speed);
         this.direction = 0;
         this.random = new Random();
-        this.isVulnerable = false;
         this.type = type;
-        this.sprites = new Image[4]; // placeholder for 4-directional sprites
+        this.sprites = new Image[2];
     }
 
     @Override
@@ -63,24 +63,15 @@ public class Ghost extends Entity {
             case 3 -> moveUp();
         }
     }
+    public String getType() {
+        return type;
+    }
 
     @Override
     public void updateAnimation() {
-        currentSpriteIndex = direction;
+        // Toggle between 1 and 2
+        animationFrame = (animationFrame == 1) ? 2 : 1;
     }
-
-    public int getDirection() {
-        return direction;
-    }
-
-    public boolean isVulnerable() {
-        return isVulnerable;
-    }
-
-    public void setVulnerable(boolean vulnerable) {
-        this.isVulnerable = vulnerable;
-    }
-
     public int getLastDirection() {
         return lastDirection;
     }
@@ -97,7 +88,8 @@ public class Ghost extends Entity {
         return confused;
     }
 
-    public String getType() {
-        return type;
+    public int getAnimationFrame() {
+        return animationFrame;
     }
+
 }

@@ -1,21 +1,25 @@
 package view;
 
 import model.BoardModel;
+import model.entity.Ghost;
 import model.utils.ResourceManager;
 
 import javax.swing.*;
 import javax.swing.table.DefaultTableCellRenderer;
 import java.awt.*;
+import java.util.List;
 
 public class BoardCellRenderer extends DefaultTableCellRenderer {
-    private ResourceManager resourceManager;
-    private int pacmanDirection = 0; // 0: right, 1: down, 2: left, 3: up
+    private final ResourceManager resourceManager;
+    private final List<Ghost> ghosts;
+    private int pacmanDirection = 0;
     private int pacmanFrame = 0;
 
-    public BoardCellRenderer() {
+    public BoardCellRenderer(List<Ghost> ghosts) {
         super();
+        this.ghosts = ghosts;
+        this.resourceManager = ResourceManager.getInstance();
         setHorizontalAlignment(JLabel.CENTER);
-        resourceManager = ResourceManager.getInstance();
     }
 
     public void setPacmanDirection(int direction) {
@@ -34,7 +38,7 @@ public class BoardCellRenderer extends DefaultTableCellRenderer {
         cell.setBackground(Color.BLACK);
         cell.setForeground(Color.WHITE);
         cell.setText("");
-        cell.setIcon(null); // ✅ Always clear icon first to prevent ghosting
+        cell.setIcon(null); // Clear previous icon
 
         int cellWidth = table.getColumnModel().getColumn(column).getWidth();
         int cellHeight = table.getRowHeight(row);
@@ -43,58 +47,99 @@ public class BoardCellRenderer extends DefaultTableCellRenderer {
             int cellType = (Integer) value;
 
             switch (cellType) {
-                case BoardModel.EMPTY:
-                    break;
+                case BoardModel.EMPTY -> {
+                    // nothing
+                }
 
-                case BoardModel.WALL:
+                case BoardModel.WALL -> {
                     cell.setIcon(new ImageIcon(
                             resourceManager.getScaledImage("wall", cellWidth, cellHeight)));
-                    break;
+                }
 
-                case BoardModel.DOT:
+                case BoardModel.DOT -> {
                     cell.setIcon(new ImageIcon(
                             resourceManager.getScaledImage("dot", cellWidth, cellHeight)));
-                    break;
+                }
 
-                case BoardModel.PACMAN:
+                case BoardModel.PACMAN -> {
                     cell.setIcon(new ImageIcon(
                             resourceManager.getScaledPacmanImage(pacmanDirection, pacmanFrame, cellWidth, cellHeight)));
-                    break;
+                }
 
-                case BoardModel.GHOST:
-                    cell.setIcon(new ImageIcon(
-                            resourceManager.getScaledImage("ghost_red", cellWidth, cellHeight)));
-                    break;
+                case BoardModel.GHOST -> {
+                    Ghost ghost = getGhostAt(row, column);
+                    if (ghost != null) {
+                        String logicalType = ghost.getType();
+                        int frame = ghost.getAnimationFrame();
 
-                case BoardModel.BOOST_HEALTH:
+                        // Map logical ghost type to color-based image prefix
+                        String colorType = switch (logicalType.toLowerCase()) {
+                            case "blinky" -> "red";
+                            case "inky" -> "blue";
+                            case "pinky" -> "yellow";
+                            case "clyde" -> "green";
+                            default -> {
+                                System.err.println("[ERROR] Unknown ghost type: " + logicalType);
+                                yield "red";
+                            }
+                        };
+
+                        String imageKey = "enemy_" + colorType + "_" + frame;
+
+                        // Debugging output
+                        System.out.println("[DEBUG] Rendering ghost at [" + row + "," + column + "]");
+                        System.out.println("[DEBUG] Ghost type: " + logicalType + " mapped to color: " + colorType);
+                        System.out.println("[DEBUG] Animation frame: " + frame);
+                        System.out.println("[DEBUG] Final image key: " + imageKey);
+
+                        Image scaledImage = resourceManager.getScaledImage(imageKey, cellWidth, cellHeight);
+                        if (scaledImage == null) {
+                            System.err.println("[ERROR] Scaled image is null for key: " + imageKey);
+                        }
+
+                        cell.setIcon(new ImageIcon(scaledImage));
+                    } else {
+                        System.err.println("[ERROR] No ghost found at [" + row + "," + column + "]");
+                    }
+                }
+
+                case BoardModel.BOOST_HEALTH -> {
                     cell.setIcon(resourceManager.getScaledBoostIcon("boostHealth", cellWidth));
-                    break;
+                }
 
-                case BoardModel.BOOST_THUNDER:
+                case BoardModel.BOOST_THUNDER -> {
                     cell.setIcon(resourceManager.getScaledBoostIcon("boostThunder", cellWidth));
-                    break;
+                }
 
-                case BoardModel.BOOST_ICE:
+                case BoardModel.BOOST_ICE -> {
                     cell.setIcon(resourceManager.getScaledBoostIcon("boostIce", cellWidth));
-                    break;
+                }
 
-                case BoardModel.BOOST_POISON:
+                case BoardModel.BOOST_POISON -> {
                     cell.setIcon(resourceManager.getScaledBoostIcon("boostPoison", cellWidth));
-                    break;
+                }
 
-                case BoardModel.BOOST_SHIELD:
+                case BoardModel.BOOST_SHIELD -> {
                     cell.setIcon(resourceManager.getScaledBoostIcon("boostShield", cellWidth));
-                    break;
+                }
 
-                default:
+                default -> {
+                    System.err.println("[WARN] Unknown tile type at [" + row + "," + column + "]: " + cellType);
                     cell.setIcon(null);
-                    break;
+                }
             }
+
         }
 
         return cell;
     }
 
-
-
+    private Ghost getGhostAt(int row, int col) {
+        for (Ghost ghost : ghosts) {
+            if (ghost.getX() == col && ghost.getY() == row) {
+                return ghost;
+            }
+        }
+        return null;
+    }
 }

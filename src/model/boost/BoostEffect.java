@@ -6,7 +6,7 @@ public abstract class BoostEffect {
     public abstract void apply(GameController controller);
 
     public void remove(GameController controller) {
-        // Override in subclasses if cleanup is needed
+
     }
 
     public void applyWithDuration(GameController controller, int durationMillis) {

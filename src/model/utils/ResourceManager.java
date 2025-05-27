@@ -29,91 +29,62 @@ public class ResourceManager {
 
     private void loadImages() {
         try {
-            // Load images for game elements
             loadImage("wall", "res/tiles/wallBlue.png");
             loadImage("dot", "res/edibles/point-l.png");
             loadImage("powerup", "res/edibles/tileYemBig.png");
-
-            // Load Pacman animation frames (only right-facing ones)
             loadImage("pacman_1", "res/pacman/pacman1.png");
             loadImage("pacman_2", "res/pacman/pacman2.png");
             loadImage("pacman_3", "res/pacman/pacman3.png");
-
-            // Load Ghost images
-            loadImage("ghost_red", "res/ghosts/enemyRed.png");
-            loadImage("ghost_pink", "res/ghosts/enemyRed.png");
-            loadImage("ghost_blue", "res/ghosts/enemyRed.png");
-            loadImage("ghost_orange", "res/ghosts/enemyRed.png");
-
-            // Load powerup images
+            loadImage("enemy_red_1", "res/ghosts/enemy_red_1.png");
+            loadImage("enemy_red_2", "res/ghosts/enemy_red_2.png");
+            loadImage("enemy_blue_1", "res/ghosts/enemy_blue_1.png");
+            loadImage("enemy_blue_2", "res/ghosts/enemy_blue_2.png");
+            loadImage("enemy_green_1", "res/ghosts/enemy_green_1.png");
+            loadImage("enemy_green_2", "res/ghosts/enemy_green_2.png");
+            loadImage("enemy_yellow_1", "res/ghosts/enemy_yellow_1.png");
+            loadImage("enemy_yellow_2", "res/ghosts/enemy_yellow_2.png");
             loadImage("boostHealth", "res/boosts/boostHealth.png");
             loadImage("boostThunder", "res/boosts/boostThunder.png");
             loadImage("boostIce", "res/boosts/boostIce.png");
             loadImage("boostPoison", "res/boosts/boostPoison.png");
             loadImage("boostShield", "res/boosts/boostShield.png");
-
-
-            // Load menu background
             loadImage("menu_background", "res/ghosts/danczakSlawomir.png");
-
         } catch (IOException e) {
             System.err.println("Error loading images: " + e.getMessage());
         }
     }
 
-    private void loadImage(String name, String path) throws IOException {
-        try {
-            // Try several approaches to load the image
-            boolean loaded = false;
+    private void loadImage(String imageKey, String imagePath) throws IOException {
+        boolean loaded = false;
 
-            // Approach 1: Direct file access
-            File file = new File(path);
-            if (file.exists()) {
-                BufferedImage img = ImageIO.read(file);
-                images.put(name, img);
+        File file = new File(imagePath);
+        if (file.exists()) {
+            images.put(imageKey, ImageIO.read(file));
+            loaded = true;
+        }
+
+        if (!loaded) {
+            try {
+                var url = getClass().getClassLoader().getResource(imagePath);
+                if (url != null) {
+                    images.put(imageKey, ImageIO.read(url));
+                    loaded = true;
+                }
+            } catch (Exception e) {
+            }
+        }
+
+        if (!loaded) {
+            File imageFile = new File(".", imagePath);
+            if (imageFile.exists()) {
+                images.put(imageKey, ImageIO.read(imageFile));
                 loaded = true;
             }
+        }
 
-            // Approach 2: Class loader
-            if (!loaded) {
-                try {
-                    java.net.URL url = getClass().getClassLoader().getResource(path);
-                    if (url != null) {
-                        BufferedImage img = ImageIO.read(url);
-                        images.put(name, img);
-                        loaded = true;
-                    }
-                } catch (Exception e) {
-                    // Continue to next approach
-                }
-            }
-
-            // Approach 3: Relative to project root
-            if (!loaded) {
-                try {
-                    File projectRoot = new File(".");
-                    File imageFile = new File(projectRoot, path);
-                    if (imageFile.exists()) {
-                        BufferedImage img = ImageIO.read(imageFile);
-                        images.put(name, img);
-                        loaded = true;
-                    }
-                } catch (Exception e) {
-                    // Continue to next approach
-                }
-            }
-
-            // If no approach worked, create a placeholder
-            if (!loaded) {
-                BufferedImage placeholder = createPlaceholderImage(name);
-                images.put(name, placeholder);
-                System.err.println("Warning: Image file not found: " + path);
-            }
-        } catch (IOException e) {
-            // Create a placeholder colored rectangle if image loading fails
-            BufferedImage placeholder = createPlaceholderImage(name);
-            images.put(name, placeholder);
-            throw e;
+        if (!loaded) {
+            System.err.println("[WARN] Failed to load image: " + imagePath + " — using placeholder.");
+            images.put(imageKey, createPlaceholderImage(imageKey));
         }
     }
 
@@ -121,7 +92,6 @@ public class ResourceManager {
         BufferedImage placeholder = new BufferedImage(20, 20, BufferedImage.TYPE_INT_ARGB);
         Graphics2D g = placeholder.createGraphics();
 
-        // Choose color based on image name
         if (name.contains("wall")) {
             g.setColor(Color.BLUE);
             g.fillRect(0, 0, 20, 20);
@@ -140,14 +110,12 @@ public class ResourceManager {
             } else {
                 g.setColor(Color.RED);
             }
-            // Draw a ghost-like shape
             g.fillRect(0, 0, 20, 15);
             g.fillOval(0, 0, 20, 15);
         } else if (name.contains("dot")) {
             g.setColor(Color.WHITE);
             g.fillOval(8, 8, 4, 4);
         } else if (name.contains("powerup")) {
-            // Different colors for different powerups
             if (name.contains("speed")) {
                 g.setColor(Color.YELLOW);
             } else if (name.contains("invulnerability")) {
@@ -163,7 +131,6 @@ public class ResourceManager {
             }
             g.fillOval(2, 2, 16, 16);
         } else if (name.contains("menu_background")) {
-            // Create a simple gradient background
             GradientPaint gradient = new GradientPaint(
                     0, 0, Color.BLACK,
                     20, 20, new Color(0, 0, 100)
@@ -188,11 +155,9 @@ public class ResourceManager {
         return original.getScaledInstance(width, height, Image.SCALE_SMOOTH);
     }
 
-    // Method to get a rotated copy of an image
     public Image getRotatedImage(String name, int degrees) {
         Image original = getImage(name);
 
-        // Convert to BufferedImage if it's not already
         BufferedImage bufferedOriginal;
         if (original instanceof BufferedImage) {
             bufferedOriginal = (BufferedImage) original;
@@ -215,11 +180,9 @@ public class ResourceManager {
         return op.filter(bufferedOriginal, null);
     }
 
-    // Method to get a flipped copy of an image
     public Image getFlippedImage(String name, boolean horizontally, boolean vertically) {
         Image original = getImage(name);
 
-        // Convert to BufferedImage if it's not already
         BufferedImage bufferedOriginal;
         if (original instanceof BufferedImage) {
             bufferedOriginal = (BufferedImage) original;
@@ -234,7 +197,6 @@ public class ResourceManager {
             g.dispose();
         }
 
-        // Create the transform
         AffineTransform transform = new AffineTransform();
         if (horizontally) {
             transform.concatenate(AffineTransform.getScaleInstance(-1, 1));
@@ -249,27 +211,24 @@ public class ResourceManager {
         return op.filter(bufferedOriginal, null);
     }
 
-    // Get a Pacman image based on direction and animation frame
     public Image getPacmanImage(int direction, int frame) {
         String baseName = "pacman_" + (frame % 3 + 1);
         Image baseImage = getImage(baseName);
 
-        // 0: right (default), 1: down, 2: left, 3: up
         switch (direction) {
-            case 0: // right - use the original image
+            case 0:
                 return baseImage;
-            case 1: // down - rotate right image 90 degrees clockwise
+            case 1:
                 return getRotatedImage(baseName, 90);
-            case 2: // left - flip the right image horizontally
+            case 2:
                 return getFlippedImage(baseName, true, false);
-            case 3: // up - rotate right image 270 degrees clockwise
+            case 3:
                 return getRotatedImage(baseName, 270);
             default:
                 return baseImage;
         }
     }
 
-    // Get a scaled Pacman image based on direction and animation frame
     public Image getScaledPacmanImage(int direction, int frame, int width, int height) {
         Image pacmanImage = getPacmanImage(direction, frame);
         return pacmanImage.getScaledInstance(width, height, Image.SCALE_SMOOTH);
@@ -279,5 +238,4 @@ public class ResourceManager {
         Image img = getImage(name);
         return new ImageIcon(img.getScaledInstance(size, size, Image.SCALE_SMOOTH));
     }
-
 }

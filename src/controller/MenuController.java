@@ -1,7 +1,6 @@
 package controller;
 
 import view.MainMenuView;
-
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 
@@ -13,7 +12,6 @@ public class MenuController {
         this.gameController = gameController;
         this.menuView = menuView;
 
-        // Add event listeners to menu buttons
         this.menuView.addNewGameListener(new ActionListener() {
             @Override
             public void actionPerformed(ActionEvent e) {

@@ -1,59 +1,62 @@
 package view;
 
 import model.BoardModel;
-import model.utils.ResourceManager;
+import model.entity.Ghost;
 
 import javax.swing.*;
 import javax.swing.table.DefaultTableCellRenderer;
 import java.awt.*;
+import java.util.List;
 
 public class BoardView extends JPanel {
-    private JTable gameTable;
-    private BoardModel boardModel;
-    private JLabel scoreLabel;
-    private JLabel timeLabel;
-    private JLabel livesLabel;
-    private JScrollPane scrollPane;
+    private final JTable gameTable;
+    private final BoardModel boardModel;
+    private final JLabel scoreLabel;
+    private final JLabel timeLabel;
+    private final JLabel livesLabel;
+    private final JScrollPane scrollPane;
+    private final java.util.List<Ghost> ghosts;
+
 
     private static final int MIN_CELL_SIZE = 10;
 
-    public BoardView(BoardModel boardModel) {
+    public BoardView(BoardModel boardModel, java.util.List<Ghost> ghosts){
         this.boardModel = boardModel;
+        this.ghosts = ghosts;
 
         setLayout(new BorderLayout());
 
-        // Create the game status panel (top)
+        // Status labels
         JPanel statusPanel = new JPanel(new FlowLayout(FlowLayout.LEFT));
         scoreLabel = new JLabel("Score: 0");
         timeLabel = new JLabel("Time: 0");
         livesLabel = new JLabel("Lives: 3");
-
         statusPanel.add(scoreLabel);
         statusPanel.add(timeLabel);
         statusPanel.add(livesLabel);
 
-        // Create the game table
+        // Game table
+        BoardCellRenderer renderer = new BoardCellRenderer(ghosts);
         gameTable = new JTable(boardModel);
-        gameTable.setDefaultRenderer(Object.class, new BoardCellRenderer());
+        gameTable.setDefaultRenderer(Object.class, renderer);
         gameTable.setAutoResizeMode(JTable.AUTO_RESIZE_OFF);
         gameTable.setShowGrid(false);
         gameTable.setIntercellSpacing(new Dimension(0, 0));
         gameTable.setTableHeader(null);
         gameTable.setFocusable(false);
 
+        scrollPane = new JScrollPane(gameTable);
 
-
-        scrollPane = new JScrollPane(gameTable); // Prepare scroll pane
-
-        // Add status panel
         add(statusPanel, BorderLayout.NORTH);
     }
-    public void updatePacmanRenderState(int direction, int frame) {
-        BoardCellRenderer renderer = (BoardCellRenderer) gameTable.getDefaultRenderer(Object.class);
-        renderer.setPacmanDirection(direction);
-        renderer.setPacmanFrame(frame);
-    }
 
+    public void updatePacmanRenderState(int direction, int frame) {
+        DefaultTableCellRenderer renderer = (DefaultTableCellRenderer) gameTable.getDefaultRenderer(Object.class);
+        if (renderer instanceof BoardCellRenderer br) {
+            br.setPacmanDirection(direction);
+            br.setPacmanFrame(frame);
+        }
+    }
 
     public void updateScore(int score) {
         scoreLabel.setText("Score: " + score);
@@ -71,13 +74,18 @@ public class BoardView extends JPanel {
         return gameTable;
     }
 
+    public Ghost getGhostAt(int row, int col) {
+        for (Ghost ghost : ghosts) {
+            if (ghost.getX() == col && ghost.getY() == row) {
+                return ghost;
+            }
+        }
+        return null;
+    }
+
     public void resizeBoard() {
-        if (scrollPane.getParent() == this) {
-            remove(scrollPane);
-        }
-        if (gameTable.getParent() == this) {
-            remove(gameTable);
-        }
+        if (scrollPane.getParent() == this) remove(scrollPane);
+        if (gameTable.getParent() == this) remove(gameTable);
 
         int cellSize = calculateCellSize();
         int boardSize = boardModel.getSize();
@@ -88,26 +96,21 @@ public class BoardView extends JPanel {
         }
 
         if (cellSize < MIN_CELL_SIZE) {
-            // Use scrollpane if cells would be too small
             add(scrollPane, BorderLayout.CENTER);
         } else {
-            // Show table directly
             add(gameTable, BorderLayout.CENTER);
         }
 
         revalidate();
         repaint();
-        requestFocusInWindow(); // ensure this component gets keyboard focus
-
+        requestFocusInWindow();
     }
 
     private int calculateCellSize() {
         Dimension viewSize = getSize();
         int boardSize = boardModel.getSize();
-
         int widthPerCell = viewSize.width / boardSize;
-        int heightPerCell = (viewSize.height - 50) / boardSize; // Leave space for status panel
-
+        int heightPerCell = (viewSize.height - 50) / boardSize;
         return Math.min(widthPerCell, heightPerCell);
     }
 

@@ -145,19 +145,4 @@ public class Pacman extends Entity {
         this.animationFrame = Math.max(0, Math.min(2, frame));
     }
 
-    public boolean hasSpeedBoost() {
-        return speedBoost;
-    }
-
-    public boolean isInvulnerable() {
-        return invulnerable;
-    }
-
-    public boolean canFreezeGhosts() {
-        return freezeGhosts;
-    }
-
-    public int getPowerUpTimer() {
-        return powerUpTimer;
-    }
 }

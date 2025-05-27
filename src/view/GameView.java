@@ -1,6 +1,7 @@
 package view;
 
 import model.BoardModel;
+import model.entity.Ghost;
 
 import javax.swing.*;
 import java.awt.*;
@@ -9,24 +10,21 @@ import java.awt.event.ComponentEvent;
 import java.awt.event.KeyListener;
 import java.awt.event.WindowAdapter;
 import java.awt.event.WindowEvent;
+import java.util.List;
 
 public class GameView extends JFrame {
-    private BoardView boardView;
-    private BoardModel boardModel;
+    private final BoardView boardView;
+    private final BoardModel boardModel;
 
-    public GameView(BoardModel boardModel) {
+    public GameView(BoardModel boardModel, List<Ghost> ghosts) {
         this.boardModel = boardModel;
 
         setTitle("Pacman Game");
-        setDefaultCloseOperation(JFrame.DISPOSE_ON_CLOSE); // Close just this window
+        setDefaultCloseOperation(JFrame.DISPOSE_ON_CLOSE);
 
-        // Create board view
-        boardView = new BoardView(boardModel);
-
-        // Add board view to the frame
+        boardView = new BoardView(boardModel, ghosts);
         add(boardView, BorderLayout.CENTER);
 
-        // Add resize listener to handle window resizing
         addComponentListener(new ComponentAdapter() {
             @Override
             public void componentResized(ComponentEvent e) {
@@ -34,23 +32,19 @@ public class GameView extends JFrame {
             }
         });
 
-        // Add window listener to handle closing
         addWindowListener(new WindowAdapter() {
             @Override
             public void windowClosing(WindowEvent e) {
-                // Return to main menu when this window is closed
-                // This will be handled by the GameController
+                // Optional cleanup
             }
         });
 
-        // Set initial size based on board size
-        int cellSize = 20; // Initial cell size
+        int cellSize = 20;
         int boardSize = boardModel.getSize();
-        int frameWidth = boardSize * cellSize + 50; // Extra space for borders
-        int frameHeight = boardSize * cellSize + 100; // Extra space for status panel and borders
-
+        int frameWidth = boardSize * cellSize + 50;
+        int frameHeight = boardSize * cellSize + 100;
         setSize(frameWidth, frameHeight);
-        setLocationRelativeTo(null); // Center on screen
+        setLocationRelativeTo(null);
     }
 
     public void addKeyListener(KeyListener listener) {

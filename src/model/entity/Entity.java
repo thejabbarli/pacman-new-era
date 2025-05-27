@@ -43,13 +43,7 @@ public abstract class Entity implements Movement {
     public void setMoving(boolean moving) {
         isMoving = moving;
     }
-
-    public Image getCurrentSprite() {
-        return sprites[currentSpriteIndex];
-    }
-
     public abstract void updateAnimation();
-
     @Override
     public void stop() {
         isMoving = false;
