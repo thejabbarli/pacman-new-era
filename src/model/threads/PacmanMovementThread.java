@@ -76,7 +76,7 @@ public class PacmanMovementThread extends GameThread {
             case UP -> newRow--;
         }
 
-        if (!boardModel.isValidPosition(newRow, newCol) || boardModel.isWall(newRow, newCol)) return false;
+        if (!boardModel.isValid(newRow, newCol) || boardModel.isWall(newRow, newCol)) return false;
 
         boardModel.setValueAt(BoardModel.EMPTY, row, col);
 

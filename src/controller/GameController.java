@@ -12,6 +12,7 @@ import model.boost.HealthBoost;
 import model.entity.Pacman;
 import model.entity.Ghost;
 import model.threads.*;
+import model.utils.MazeGenerator;
 import view.GameView;
 import view.MainMenuView;
 import view.HighScoresView;
@@ -77,6 +78,15 @@ public class GameController {
         time = 0;
 
         boardModel = new BoardModel(boardSize);
+        MazeGenerator generator = new MazeGenerator(boardSize, boardSize);
+        int[][] maze = generator.generate();
+
+        for (int r = 0; r < boardSize; r++) {
+            for (int c = 0; c < boardSize; c++) {
+                boardModel.setTile(r, c, maze[r][c]);
+            }
+        }
+
         boardModel.setController(this);
         clearGhostTiles();
         createGameEntities();
@@ -147,8 +157,8 @@ public class GameController {
     private void clearGhostTiles() {
         for (int r = 0; r < boardModel.getSize(); r++) {
             for (int c = 0; c < boardModel.getSize(); c++) {
-                if (boardModel.getValueAt(r, c).equals(BoardModel.GHOST)) {
-                    boardModel.setValueAt(BoardModel.DOT, r, c);
+                if (boardModel.getTile(r, c) == BoardModel.GHOST) {
+                    boardModel.setTile(r, c, BoardModel.DOT);
                 }
             }
         }
@@ -204,25 +214,28 @@ public class GameController {
     }
 
     public void respawnAfterDeath() {
-        // 1. Clear every PACMAN from board (safe reset)
+        // Remove all PACMANs
         for (int r = 0; r < boardModel.getSize(); r++) {
             for (int c = 0; c < boardModel.getSize(); c++) {
-                if (boardModel.getValueAt(r, c).equals(BoardModel.PACMAN)) {
-                    boardModel.setValueAt(BoardModel.EMPTY, r, c);
+                if (boardModel.getTile(r, c) == BoardModel.PACMAN) {
+                    boardModel.setTile(r, c, BoardModel.EMPTY);
                 }
             }
         }
 
-        // 2. Reset coordinates
+        // Reset coordinates
         pacman.setX(1);
         pacman.setY(1);
 
-        // 3. Force cell to be empty (even if overwritten by ghost)
-        boardModel.setValueAt(BoardModel.EMPTY, 1, 1);
+        // If ghost is at spawn point, restore original tile (DOT or EMPTY)
+        if (boardModel.getTile(1, 1) == BoardModel.GHOST) {
+            boardModel.setTile(1, 1, BoardModel.DOT);
+        }
 
-        // 4. Place new Pacman
-        boardModel.setValueAt(BoardModel.PACMAN, 1, 1);
+        // Place Pacman back
+        boardModel.setTile(1, 1, BoardModel.PACMAN);
     }
+
 
 
 

@@ -40,7 +40,7 @@ public class PowerUpGeneratorThread extends GameThread {
                         int newRow = row + dir[0];
                         int newCol = col + dir[1];
 
-                        if (!boardModel.isValidPosition(newRow, newCol)) continue;
+                        if (!boardModel.isValid(newRow, newCol)) continue;
 
                         int current = (int) boardModel.getValueAt(newRow, newCol);
                         boolean isFree = current == BoardModel.EMPTY || current == BoardModel.DOT;

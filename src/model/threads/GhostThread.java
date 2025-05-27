@@ -87,9 +87,10 @@ public class GhostThread extends Thread {
                     case 3 -> newRow = row - 1; // UP
                 }
 
-                if (boardModel.isValidPosition(newRow, newCol)
+                if (boardModel.isValid(newRow, newCol)
                         && !boardModel.isWall(newRow, newCol)
-                        && !Objects.equals(boardModel.getValueAt(newRow, newCol), BoardModel.GHOST)) {
+                        && boardModel.getTile(newRow, newCol) != BoardModel.GHOST)
+                {
 
                     ghost.setX(newCol);
                     ghost.setY(newRow);
