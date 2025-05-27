@@ -9,6 +9,8 @@ import model.HighScoreManager;
 import model.boost.BoostEffect;
 import model.boost.BoostFactory;
 import model.boost.HealthBoost;
+import model.config.GameConstants;
+import model.entity.GhostConfig;
 import model.entity.Pacman;
 import model.entity.Ghost;
 import model.threads.*;
@@ -124,10 +126,17 @@ public class GameController {
         int boardSize = boardModel.getSize();
         int center = boardSize / 2;
 
-        ghosts.add(new Ghost(center, center, 250, Color.RED));
-        ghosts.add(new Ghost(center + 1, center, 250, Color.CYAN));
-        ghosts.add(new Ghost(center, center + 1, 250, Color.ORANGE));
-        ghosts.add(new Ghost(center - 1, center, 250, Color.PINK));
+        ghosts.clear();
+        for (GhostConfig config : GameConstants.DEFAULT_GHOSTS) {
+            int gx = center + config.offsetX;
+            int gy = center + config.offsetY;
+
+            Ghost ghost = new Ghost(gx, gy, config.speed, config.type);
+
+            ghosts.add(ghost);
+            boardModel.setTile(gy, gx, BoardModel.GHOST);
+        }
+
 
         for (Ghost ghost : ghosts) {
             boardModel.setValueAt(BoardModel.GHOST, ghost.getY(), ghost.getX());
