@@ -69,7 +69,6 @@ public class Ghost extends Entity {
 
     @Override
     public void updateAnimation() {
-        // Toggle between 1 and 2
         animationFrame = (animationFrame == 1) ? 2 : 1;
     }
     public int getLastDirection() {

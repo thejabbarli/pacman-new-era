@@ -10,8 +10,8 @@ public class PowerUpGeneratorThread extends GameThread {
     private final BoardModel boardModel;
     private final List<Ghost> ghosts;
     private final Random random;
-    private final int generationInterval;  // in ms
-    private final int generationChance;    // 25%
+    private final int generationInterval;
+    private final int generationChance;
 
     public PowerUpGeneratorThread(BoardModel boardModel, List<Ghost> ghosts, int generationInterval, int generationChance) {
         super();
@@ -31,9 +31,9 @@ public class PowerUpGeneratorThread extends GameThread {
                     int row = ghost.getY();
                     int col = ghost.getX();
 
-                    // Only place if tile is not wall
+
                     int[][] directions = {
-                            {0, 1}, {1, 0}, {0, -1}, {-1, 0} // right, down, left, up
+                            {0, 1}, {1, 0}, {0, -1}, {-1, 0}
                     };
 
                     for (int[] dir : directions) {
@@ -49,7 +49,7 @@ public class PowerUpGeneratorThread extends GameThread {
                         if (isFree && isNotBoost) {
                             int boostType = random.nextInt(5) + 6; // 6 to 10
                             boardModel.setValueAt(boostType, newRow, newCol);
-                            break; // Only place one
+                            break;
                         }
                     }
 

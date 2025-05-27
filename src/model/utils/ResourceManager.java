@@ -50,19 +50,16 @@ public class ResourceManager {
             loadImage("boostShield", "res/boosts/boostShield.png");
             loadImage("menu_background", "res/ghosts/danczakSlawomir.png");
         } catch (IOException e) {
-            System.err.println("Error loading images: " + e.getMessage());
         }
     }
 
     private void loadImage(String imageKey, String imagePath) throws IOException {
         boolean loaded = false;
-
         File file = new File(imagePath);
         if (file.exists()) {
             images.put(imageKey, ImageIO.read(file));
             loaded = true;
         }
-
         if (!loaded) {
             try {
                 var url = getClass().getClassLoader().getResource(imagePath);
@@ -73,7 +70,6 @@ public class ResourceManager {
             } catch (Exception e) {
             }
         }
-
         if (!loaded) {
             File imageFile = new File(".", imagePath);
             if (imageFile.exists()) {
@@ -81,9 +77,7 @@ public class ResourceManager {
                 loaded = true;
             }
         }
-
         if (!loaded) {
-            System.err.println("[WARN] Failed to load image: " + imagePath + " — using placeholder.");
             images.put(imageKey, createPlaceholderImage(imageKey));
         }
     }
@@ -91,7 +85,6 @@ public class ResourceManager {
     private BufferedImage createPlaceholderImage(String name) {
         BufferedImage placeholder = new BufferedImage(20, 20, BufferedImage.TYPE_INT_ARGB);
         Graphics2D g = placeholder.createGraphics();
-
         if (name.contains("wall")) {
             g.setColor(Color.BLUE);
             g.fillRect(0, 0, 20, 20);
@@ -131,17 +124,13 @@ public class ResourceManager {
             }
             g.fillOval(2, 2, 16, 16);
         } else if (name.contains("menu_background")) {
-            GradientPaint gradient = new GradientPaint(
-                    0, 0, Color.BLACK,
-                    20, 20, new Color(0, 0, 100)
-            );
+            GradientPaint gradient = new GradientPaint(0, 0, Color.BLACK, 20, 20, new Color(0, 0, 100));
             g.setPaint(gradient);
             g.fillRect(0, 0, 20, 20);
         } else {
             g.setColor(Color.GRAY);
             g.fillRect(0, 0, 20, 20);
         }
-
         g.dispose();
         return placeholder;
     }
@@ -157,46 +146,33 @@ public class ResourceManager {
 
     public Image getRotatedImage(String name, int degrees) {
         Image original = getImage(name);
-
         BufferedImage bufferedOriginal;
         if (original instanceof BufferedImage) {
             bufferedOriginal = (BufferedImage) original;
         } else {
-            bufferedOriginal = new BufferedImage(
-                    original.getWidth(null),
-                    original.getHeight(null),
-                    BufferedImage.TYPE_INT_ARGB
-            );
+            bufferedOriginal = new BufferedImage(original.getWidth(null), original.getHeight(null), BufferedImage.TYPE_INT_ARGB);
             Graphics2D g = bufferedOriginal.createGraphics();
             g.drawImage(original, 0, 0, null);
             g.dispose();
         }
-
         double radians = Math.toRadians(degrees);
         AffineTransform transform = new AffineTransform();
         transform.rotate(radians, bufferedOriginal.getWidth() / 2.0, bufferedOriginal.getHeight() / 2.0);
-
         AffineTransformOp op = new AffineTransformOp(transform, AffineTransformOp.TYPE_BILINEAR);
         return op.filter(bufferedOriginal, null);
     }
 
     public Image getFlippedImage(String name, boolean horizontally, boolean vertically) {
         Image original = getImage(name);
-
         BufferedImage bufferedOriginal;
         if (original instanceof BufferedImage) {
             bufferedOriginal = (BufferedImage) original;
         } else {
-            bufferedOriginal = new BufferedImage(
-                    original.getWidth(null),
-                    original.getHeight(null),
-                    BufferedImage.TYPE_INT_ARGB
-            );
+            bufferedOriginal = new BufferedImage(original.getWidth(null), original.getHeight(null), BufferedImage.TYPE_INT_ARGB);
             Graphics2D g = bufferedOriginal.createGraphics();
             g.drawImage(original, 0, 0, null);
             g.dispose();
         }
-
         AffineTransform transform = new AffineTransform();
         if (horizontally) {
             transform.concatenate(AffineTransform.getScaleInstance(-1, 1));
@@ -206,7 +182,6 @@ public class ResourceManager {
             transform.concatenate(AffineTransform.getScaleInstance(1, -1));
             transform.concatenate(AffineTransform.getTranslateInstance(0, -bufferedOriginal.getHeight()));
         }
-
         AffineTransformOp op = new AffineTransformOp(transform, AffineTransformOp.TYPE_BILINEAR);
         return op.filter(bufferedOriginal, null);
     }
@@ -214,19 +189,13 @@ public class ResourceManager {
     public Image getPacmanImage(int direction, int frame) {
         String baseName = "pacman_" + (frame % 3 + 1);
         Image baseImage = getImage(baseName);
-
-        switch (direction) {
-            case 0:
-                return baseImage;
-            case 1:
-                return getRotatedImage(baseName, 90);
-            case 2:
-                return getFlippedImage(baseName, true, false);
-            case 3:
-                return getRotatedImage(baseName, 270);
-            default:
-                return baseImage;
-        }
+        return switch (direction) {
+            case 0 -> baseImage;
+            case 1 -> getRotatedImage(baseName, 90);
+            case 2 -> getFlippedImage(baseName, true, false);
+            case 3 -> getRotatedImage(baseName, 270);
+            default -> baseImage;
+        };
     }
 
     public Image getScaledPacmanImage(int direction, int frame, int width, int height) {

@@ -15,18 +15,13 @@ public class BoardView extends JPanel {
     private final JLabel timeLabel;
     private final JLabel livesLabel;
     private final JScrollPane scrollPane;
-    private final java.util.List<Ghost> ghosts;
-
-
     private static final int MIN_CELL_SIZE = 10;
 
     public BoardView(BoardModel boardModel, java.util.List<Ghost> ghosts){
         this.boardModel = boardModel;
-        this.ghosts = ghosts;
 
         setLayout(new BorderLayout());
 
-        // Status labels
         JPanel statusPanel = new JPanel(new FlowLayout(FlowLayout.LEFT));
         scoreLabel = new JLabel("Score: 0");
         timeLabel = new JLabel("Time: 0");
@@ -35,7 +30,6 @@ public class BoardView extends JPanel {
         statusPanel.add(timeLabel);
         statusPanel.add(livesLabel);
 
-        // Game table
         BoardCellRenderer renderer = new BoardCellRenderer(ghosts);
         gameTable = new JTable(boardModel);
         gameTable.setDefaultRenderer(Object.class, renderer);
@@ -70,19 +64,6 @@ public class BoardView extends JPanel {
         livesLabel.setText("Lives: " + lives);
     }
 
-    public JTable getGameTable() {
-        return gameTable;
-    }
-
-    public Ghost getGhostAt(int row, int col) {
-        for (Ghost ghost : ghosts) {
-            if (ghost.getX() == col && ghost.getY() == row) {
-                return ghost;
-            }
-        }
-        return null;
-    }
-
     public void resizeBoard() {
         if (scrollPane.getParent() == this) remove(scrollPane);
         if (gameTable.getParent() == this) remove(gameTable);
@@ -113,7 +94,6 @@ public class BoardView extends JPanel {
         int heightPerCell = (viewSize.height - 50) / boardSize;
         return Math.min(widthPerCell, heightPerCell);
     }
-
     @Override
     protected void paintComponent(Graphics g) {
         super.paintComponent(g);

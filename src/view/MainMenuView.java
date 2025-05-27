@@ -15,18 +15,14 @@ public class MainMenuView extends JFrame {
 
     public MainMenuView() {
         setTitle("Pacman Game");
-        setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE); // Fully exit application when main menu is closed
-
-        // Get the background image
+        setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
         ResourceManager resourceManager = ResourceManager.getInstance();
         backgroundImage = resourceManager.getImage("menu_background");
 
-        // Create a custom panel with background image
         mainPanel = new JPanel() {
             @Override
             protected void paintComponent(Graphics g) {
                 super.paintComponent(g);
-                // Draw the background image
                 if (backgroundImage != null) {
                     g.drawImage(backgroundImage, 0, 0, getWidth(), getHeight(), this);
                 } else {
@@ -37,21 +33,17 @@ public class MainMenuView extends JFrame {
         };
 
         mainPanel.setLayout(new GridLayout(3, 1, 10, 10));
-
-        // Create stylish buttons
         newGameButton = createStyledButton("New Game");
         highScoresButton = createStyledButton("High Scores");
         exitButton = createStyledButton("Exit");
 
-        // Add components to panel
         mainPanel.add(newGameButton);
         mainPanel.add(highScoresButton);
         mainPanel.add(exitButton);
 
-        // Set up the frame
         add(mainPanel);
         setSize(400, 300);
-        setLocationRelativeTo(null); // Center on screen
+        setLocationRelativeTo(null);
     }
 
     private JButton createStyledButton(String text) {
@@ -78,33 +70,17 @@ public class MainMenuView extends JFrame {
     }
 
     public int showBoardSizeDialog() {
-        String sizeStr = JOptionPane.showInputDialog(
-                this,
-                "Enter the size of the board (10-100):",
-                "Board Size",
-                JOptionPane.QUESTION_MESSAGE
-        );
-
+        String sizeStr = JOptionPane.showInputDialog(this, "Enter the size of the board (10-100):", "Board Size", JOptionPane.QUESTION_MESSAGE);
         try {
             int size = Integer.parseInt(sizeStr);
             if (size >= 10 && size <= 100) {
                 return size;
             } else {
-                JOptionPane.showMessageDialog(
-                        this,
-                        "Please enter a number between 10 and 100",
-                        "Invalid Input",
-                        JOptionPane.ERROR_MESSAGE
-                );
+                JOptionPane.showMessageDialog(this, "Please enter a number between 10 and 100", "Invalid Input", JOptionPane.ERROR_MESSAGE);
                 return -1;
             }
         } catch (NumberFormatException e) {
-            JOptionPane.showMessageDialog(
-                    this,
-                    "Please enter a valid number",
-                    "Invalid Input",
-                    JOptionPane.ERROR_MESSAGE
-            );
+            JOptionPane.showMessageDialog(this, "Please enter a valid number", "Invalid Input", JOptionPane.ERROR_MESSAGE);
             return -1;
         }
     }

@@ -6,9 +6,7 @@ import view.BoardView;
 import controller.GameController;
 
 import javax.swing.*;
-import java.awt.*;
 import java.util.*;
-import java.util.List;
 
 public class GhostThread extends Thread {
     private final Ghost ghost;
@@ -21,7 +19,6 @@ public class GhostThread extends Thread {
     private final Random random = new Random();
 
     public GhostThread(Ghost ghost, BoardModel boardModel, BoardView boardView, int movementSpeed, GameController controller) {
-
         this.ghost = ghost;
         this.boardModel = boardModel;
         this.boardView = boardView;
@@ -42,7 +39,6 @@ public class GhostThread extends Thread {
                     }
                 }
             }
-
             doAction();
         }
     }
@@ -51,18 +47,15 @@ public class GhostThread extends Thread {
         try {
             int row = ghost.getY();
             int col = ghost.getX();
-
             List<Integer> dirList = new ArrayList<>();
 
             if (ghost.isConfused()) {
-                // Confused ghosts pick completely random directions (can repeat)
                 for (int i = 0; i < 4; i++) {
-                    dirList.add(random.nextInt(4)); // values 0–3
+                    dirList.add(random.nextInt(4));
                 }
             } else {
-                dirList = new ArrayList<>(Arrays.asList(0, 1, 2, 3)); // 0: right, 1: down, 2: left, 3: up
+                dirList = new ArrayList<>(Arrays.asList(0, 1, 2, 3));
                 Collections.shuffle(dirList);
-
                 int last = ghost.getLastDirection();
                 int opposite = switch (last) {
                     case 0 -> 2;
@@ -81,27 +74,24 @@ public class GhostThread extends Thread {
                 int newCol = col;
 
                 switch (dir) {
-                    case 0 -> newCol = col + 1; // RIGHT
-                    case 1 -> newRow = row + 1; // DOWN
-                    case 2 -> newCol = col - 1; // LEFT
-                    case 3 -> newRow = row - 1; // UP
+                    case 0 -> newCol = col + 1;
+                    case 1 -> newRow = row + 1;
+                    case 2 -> newCol = col - 1;
+                    case 3 -> newRow = row - 1;
                 }
 
                 if (boardModel.isValid(newRow, newCol)
                         && !boardModel.isWall(newRow, newCol)
-                        && boardModel.getTile(newRow, newCol) != BoardModel.GHOST)
-                {
+                        && boardModel.getTile(newRow, newCol) != BoardModel.GHOST) {
 
                     ghost.setX(newCol);
                     ghost.setY(newRow);
                     ghost.setLastDirection(dir);
-
                     boolean hitPacman = boardModel.moveGhost(row, col, newRow, newCol);
                     if (hitPacman && !controller.isInvincible()) {
                         controller.updateLives(-1);
                         controller.respawnAfterDeath();
                     }
-
                     moved = true;
                     break;
                 }
@@ -113,12 +103,10 @@ public class GhostThread extends Thread {
 
             SwingUtilities.invokeLater(boardView::repaint);
             Thread.sleep(movementSpeed);
-
         } catch (InterruptedException e) {
             Thread.currentThread().interrupt();
         }
     }
-
 
     public void stopThread() {
         running = false;

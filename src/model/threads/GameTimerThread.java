@@ -11,29 +11,15 @@ public class GameTimerThread extends GameThread {
         this.gameController = gameController;
         this.seconds = 0;
     }
-
     @Override
     protected void doAction() {
         try {
-            // Sleep for 1 second
             Thread.sleep(1000);
-
-            // Increment the time
             seconds++;
-
-            // Update the view with new time
             gameController.updateTime(seconds);
-
         } catch (InterruptedException e) {
             Thread.currentThread().interrupt();
         }
     }
 
-    public int getSeconds() {
-        return seconds;
-    }
-
-    public void resetTimer() {
-        this.seconds = 0;
-    }
 }

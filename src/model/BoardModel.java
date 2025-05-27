@@ -22,6 +22,7 @@ public class BoardModel extends AbstractTableModel {
     public static final int BOOST_ICE = 8;
     public static final int BOOST_POISON = 9;
     public static final int BOOST_SHIELD = 10;
+
     private GameController controller;
     private final Map<Point, Integer> ghostUnderTiles = new HashMap<>();
 
@@ -38,7 +39,6 @@ public class BoardModel extends AbstractTableModel {
             }
         }
     }
-
 
     @Override
     public int getRowCount() {
@@ -81,7 +81,6 @@ public class BoardModel extends AbstractTableModel {
         return (val == null) ? EMPTY : val;
     }
 
-
     public boolean isWall(int row, int col) {
         return getTile(row, col) == WALL;
     }
@@ -93,9 +92,11 @@ public class BoardModel extends AbstractTableModel {
     public int getSize() {
         return size;
     }
+
     public void setController(GameController controller) {
         this.controller = controller;
     }
+
     public int[] findTile(int tileType) {
         for (int r = 0; r < size; r++)
             for (int c = 0; c < size; c++)
@@ -103,6 +104,7 @@ public class BoardModel extends AbstractTableModel {
                     return new int[]{r, c};
         return null;
     }
+
     public int[] findPacmanPosition() {
         for (int r = 0; r < size; r++) {
             for (int c = 0; c < size; c++) {
@@ -113,10 +115,8 @@ public class BoardModel extends AbstractTableModel {
         return null;
     }
 
-
     public int movePacman(int fromRow, int fromCol, int toRow, int toCol) {
         if (!isValid(toRow, toCol) || isWall(toRow, toCol)) return -1;
-
         int eaten = board[toRow][toCol];
         setTile(fromRow, fromCol, EMPTY);
         setTile(toRow, toCol, PACMAN);
@@ -125,27 +125,19 @@ public class BoardModel extends AbstractTableModel {
 
     public boolean moveGhost(int fromRow, int fromCol, int toRow, int toCol) {
         if (!isValid(toRow, toCol) || isWall(toRow, toCol)) return false;
-
         Point from = new Point(fromCol, fromRow);
         Point to = new Point(toCol, toRow);
-
         boolean hitPacman = getTile(toRow, toCol) == PACMAN;
-
         if (!ghostUnderTiles.containsKey(from)) {
-            ghostUnderTiles.put(from, DOT); // default to DOT
+            ghostUnderTiles.put(from, DOT);
         }
-
         board[fromRow][fromCol] = ghostUnderTiles.remove(from);
-        if (board[fromRow][fromCol] == null) board[fromRow][fromCol] = DOT; // safety
+        if (board[fromRow][fromCol] == null) board[fromRow][fromCol] = DOT;
         fireTableCellUpdated(fromRow, fromCol);
-
         Integer under = board[toRow][toCol];
         ghostUnderTiles.put(to, (under != null) ? under : DOT);
-
         board[toRow][toCol] = GHOST;
         fireTableCellUpdated(toRow, toCol);
-
         return hitPacman;
     }
-
 }

@@ -14,10 +14,8 @@ import java.util.List;
 
 public class GameView extends JFrame {
     private final BoardView boardView;
-    private final BoardModel boardModel;
 
     public GameView(BoardModel boardModel, List<Ghost> ghosts) {
-        this.boardModel = boardModel;
 
         setTitle("Pacman Game");
         setDefaultCloseOperation(JFrame.DISPOSE_ON_CLOSE);
@@ -35,7 +33,7 @@ public class GameView extends JFrame {
         addWindowListener(new WindowAdapter() {
             @Override
             public void windowClosing(WindowEvent e) {
-                // Optional cleanup
+
             }
         });
 
